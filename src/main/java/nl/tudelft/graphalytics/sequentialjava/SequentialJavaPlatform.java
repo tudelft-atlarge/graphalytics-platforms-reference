@@ -15,6 +15,8 @@
  */
 package nl.tudelft.graphalytics.sequentialjava;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.LongList;
 import nl.tudelft.graphalytics.Platform;
 import nl.tudelft.graphalytics.PlatformExecutionException;
 import nl.tudelft.graphalytics.domain.Benchmark;
@@ -29,9 +31,11 @@ import nl.tudelft.graphalytics.domain.PlatformBenchmarkResult;
  */
 public class SequentialJavaPlatform implements Platform {
 
+	private Long2ObjectMap<LongList> graphEdges;
+
 	@Override
 	public void uploadGraph(Graph graph) throws Exception {
-		// TODO
+		graphEdges = new GraphParser(graph).parse();
 	}
 
 	@Override
@@ -42,7 +46,7 @@ public class SequentialJavaPlatform implements Platform {
 
 	@Override
 	public void deleteGraph(String graphName) {
-		// TODO
+		graphEdges = null;
 	}
 
 	@Override

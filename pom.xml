@@ -9,6 +9,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+		<fastutil.version>7.0.10</fastutil.version>
 		<graphalytics.version>0.3-SNAPSHOT</graphalytics.version>
 		<log4j.version>2.5</log4j.version>
 	</properties>
@@ -39,6 +40,11 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>it.unimi.dsi</groupId>
+			<artifactId>fastutil</artifactId>
+			<version>${fastutil.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
