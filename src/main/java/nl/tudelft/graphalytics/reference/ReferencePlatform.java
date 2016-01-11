@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.tudelft.graphalytics.sequentialjava;
+package nl.tudelft.graphalytics.reference;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongList;
@@ -21,14 +21,14 @@ import nl.tudelft.graphalytics.Platform;
 import nl.tudelft.graphalytics.PlatformExecutionException;
 import nl.tudelft.graphalytics.domain.*;
 import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
-import nl.tudelft.graphalytics.sequentialjava.algorithms.bfs.BreadthFirstSearchJob;
+import nl.tudelft.graphalytics.reference.algorithms.bfs.BreadthFirstSearchJob;
 
 /**
  * Sequential Java implementation of the Graphalytics benchmark.
  *
  * @author Tim Hegeman
  */
-public class SequentialJavaPlatform implements Platform {
+public class ReferencePlatform implements Platform {
 
 	private Long2ObjectMap<LongList> graphEdges;
 

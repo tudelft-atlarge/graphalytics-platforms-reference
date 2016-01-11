@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.tudelft.graphalytics.sequentialjava.algorithms.bfs;
+package nl.tudelft.graphalytics.reference.algorithms.bfs;
 
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
-import nl.tudelft.graphalytics.sequentialjava.ValidationGraphParser;
+import nl.tudelft.graphalytics.reference.ValidationGraphParser;
 import nl.tudelft.graphalytics.validation.GraphStructure;
 import nl.tudelft.graphalytics.validation.bfs.BreadthFirstSearchOutput;
 import nl.tudelft.graphalytics.validation.bfs.BreadthFirstSearchValidationTest;

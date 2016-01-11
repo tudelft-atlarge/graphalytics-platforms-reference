@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.tudelft.graphalytics.sequentialjava.algorithms.bfs;
+package nl.tudelft.graphalytics.reference.algorithms.bfs;
 
 import it.unimi.dsi.fastutil.longs.*;
 import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
