@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>nl.tudelft.graphalytics</groupId>
-	<artifactId>graphalytics-platforms-sequentialjava</artifactId>
+	<artifactId>graphalytics-platforms-reference</artifactId>
 	<version>0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
@@ -15,7 +15,7 @@
 	</properties>
 
 	<scm>
-		<developerConnection>scm:git:ssh://git@github.com/tudelft-atlarge/graphalytics-platforms-sequentialjava</developerConnection>
+		<developerConnection>scm:git:ssh://git@github.com/tudelft-atlarge/graphalytics-platforms-reference</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
@@ -170,7 +170,7 @@
 							<descriptors>
 								<descriptor>src/main/assembly/bin.xml</descriptor>
 							</descriptors>
-							<finalName>graphalytics-${graphalytics.version}-sequentialjava-${project.version}</finalName>
+							<finalName>graphalytics-${graphalytics.version}-reference-${project.version}</finalName>
 							<tarLongFileMode>posix</tarLongFileMode>
 							<outputDirectory>${project.basedir}</outputDirectory>
 						</configuration>

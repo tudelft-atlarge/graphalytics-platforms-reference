@@ -30,7 +30,7 @@
 		<file>
 			<source>${project.basedir}/README.md</source>
 			<outputDirectory>.</outputDirectory>
-			<destName>README-graphalytics-sequentialjava.md</destName>
+			<destName>README-graphalytics-reference.md</destName>
 		</file>
 	</files>
 

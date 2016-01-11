@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Validation tests for the Sequential Java BFS implementation.
+ * Validation tests for the reference BFS implementation.
  *
  * @author Tim Hegeman
  */

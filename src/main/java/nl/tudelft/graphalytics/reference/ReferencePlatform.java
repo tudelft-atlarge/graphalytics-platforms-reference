@@ -24,7 +24,7 @@ import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
 import nl.tudelft.graphalytics.reference.algorithms.bfs.BreadthFirstSearchJob;
 
 /**
- * Sequential Java implementation of the Graphalytics benchmark.
+ * Reference implementation of the Graphalytics benchmark.
  *
  * @author Tim Hegeman
  */
@@ -58,7 +58,7 @@ public class ReferencePlatform implements Platform {
 
 	@Override
 	public String getName() {
-		return "sequentialjava";
+		return "reference";
 	}
 
 	@Override

@@ -1,11 +1,10 @@
-# Graphalytics sequential Java implementation
+# Graphalytics algorithms reference implementation
 
 ## Getting started
 
 Please refer to the documentation of the Graphalytics core (`graphalytics` repository) for an introduction to using Graphalytics.
 
-
-## Sequential-Java-specific configuration
+## Reference-implementation-specific configuration
 
 To be added.
 

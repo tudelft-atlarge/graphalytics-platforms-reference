@@ -21,7 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Sequential Java implementation of the Breadth First Search algorithm.
+ * Reference implementation of the Breadth First Search algorithm.
  *
  * @author Tim Hegeman
  */
