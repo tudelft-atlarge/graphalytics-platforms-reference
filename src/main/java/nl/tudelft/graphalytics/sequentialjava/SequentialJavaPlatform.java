@@ -19,10 +19,9 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nl.tudelft.graphalytics.Platform;
 import nl.tudelft.graphalytics.PlatformExecutionException;
-import nl.tudelft.graphalytics.domain.Benchmark;
-import nl.tudelft.graphalytics.domain.Graph;
-import nl.tudelft.graphalytics.domain.NestedConfiguration;
-import nl.tudelft.graphalytics.domain.PlatformBenchmarkResult;
+import nl.tudelft.graphalytics.domain.*;
+import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
+import nl.tudelft.graphalytics.sequentialjava.algorithms.bfs.BreadthFirstSearchJob;
 
 /**
  * Sequential Java implementation of the Graphalytics benchmark.
@@ -40,8 +39,16 @@ public class SequentialJavaPlatform implements Platform {
 
 	@Override
 	public PlatformBenchmarkResult executeAlgorithmOnGraph(Benchmark benchmark) throws PlatformExecutionException {
-		// TODO
-		return null;
+		Algorithm algorithm = benchmark.getAlgorithm();
+		Object parameters = benchmark.getAlgorithmParameters();
+		switch (algorithm) {
+			case BFS:
+				new BreadthFirstSearchJob(graphEdges, (BreadthFirstSearchParameters)parameters).run();
+				break;
+			default:
+				throw new PlatformExecutionException("Unsupported algorithm: " + algorithm);
+		}
+		return new PlatformBenchmarkResult(getPlatformConfiguration());
 	}
 
 	@Override
