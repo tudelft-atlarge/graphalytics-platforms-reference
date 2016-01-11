@@ -1,3 +1,6 @@
+# Artifacts
+/*.tar.gz
+
 # Java
 *.class
 *.jar
