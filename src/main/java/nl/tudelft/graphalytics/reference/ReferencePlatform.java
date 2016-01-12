@@ -21,7 +21,13 @@ import nl.tudelft.graphalytics.Platform;
 import nl.tudelft.graphalytics.PlatformExecutionException;
 import nl.tudelft.graphalytics.domain.*;
 import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
+import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionParameters;
+import nl.tudelft.graphalytics.domain.algorithms.PageRankParameters;
 import nl.tudelft.graphalytics.reference.algorithms.bfs.BreadthFirstSearchJob;
+import nl.tudelft.graphalytics.reference.algorithms.cd.CommunityDetectionJob;
+import nl.tudelft.graphalytics.reference.algorithms.conn.ConnectedComponentsJob;
+import nl.tudelft.graphalytics.reference.algorithms.pr.PageRankJob;
+import nl.tudelft.graphalytics.reference.algorithms.stats.LocalClusteringCoefficientJob;
 
 /**
  * Reference implementation of the Graphalytics benchmark.
@@ -31,10 +37,12 @@ import nl.tudelft.graphalytics.reference.algorithms.bfs.BreadthFirstSearchJob;
 public class ReferencePlatform implements Platform {
 
 	private Long2ObjectMap<LongList> graphEdges;
+	private boolean graphDirected;
 
 	@Override
 	public void uploadGraph(Graph graph) throws Exception {
 		graphEdges = new GraphParser(graph).parse();
+		graphDirected = graph.getGraphFormat().isDirected();
 	}
 
 	@Override
@@ -43,7 +51,19 @@ public class ReferencePlatform implements Platform {
 		Object parameters = benchmark.getAlgorithmParameters();
 		switch (algorithm) {
 			case BFS:
-				new BreadthFirstSearchJob(graphEdges, (BreadthFirstSearchParameters)parameters).run();
+				new BreadthFirstSearchJob(graphEdges, graphDirected, (BreadthFirstSearchParameters)parameters).run();
+				break;
+			case CD:
+				new CommunityDetectionJob(graphEdges, (CommunityDetectionParameters)parameters).run();
+				break;
+			case CONN:
+				new ConnectedComponentsJob(graphEdges, graphDirected).run();
+				break;
+			case PAGERANK:
+				new PageRankJob(graphEdges, (PageRankParameters)parameters).run();
+				break;
+			case STATS:
+				new LocalClusteringCoefficientJob(graphEdges, graphDirected).run();
 				break;
 			default:
 				throw new PlatformExecutionException("Unsupported algorithm: " + algorithm);

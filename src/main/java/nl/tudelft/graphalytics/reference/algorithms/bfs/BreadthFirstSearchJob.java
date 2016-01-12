@@ -17,6 +17,8 @@ package nl.tudelft.graphalytics.reference.algorithms.bfs;
 
 import it.unimi.dsi.fastutil.longs.*;
 import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
+import nl.tudelft.graphalytics.reference.GraphParser;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,8 +36,8 @@ public class BreadthFirstSearchJob {
 	private final Long2ObjectMap<LongList> graphData;
 	private final BreadthFirstSearchParameters parameters;
 
-	public BreadthFirstSearchJob(Long2ObjectMap<LongList> graphData, BreadthFirstSearchParameters parameters) {
-		this.graphData = graphData;
+	public BreadthFirstSearchJob(Long2ObjectMap<LongList> graphData, boolean directed, BreadthFirstSearchParameters parameters) {
+		this.graphData = !directed ? GraphParser.convertToUndirected(graphData) : graphData;
 		this.parameters = parameters;
 	}
 
@@ -44,8 +46,8 @@ public class BreadthFirstSearchJob {
 
 		// Initialize distances
 		Long2LongMap distances = new Long2LongOpenHashMap(graphData.size());
-		for (Long2ObjectMap.Entry<LongList> entry : graphData.long2ObjectEntrySet()) {
-			distances.put(entry.getLongKey(), MAX_DISTANCE);
+		for (long v: graphData.keySet()) {
+			distances.put(v, MAX_DISTANCE);
 		}
 		distances.put(parameters.getSourceVertex(), 0L);
 
@@ -61,9 +63,11 @@ public class BreadthFirstSearchJob {
 		while (!queue.isEmpty()) {
 			long currentVertexId = queue.dequeueLong();
 			long currentVertexDistance = distances.get(currentVertexId);
+			
 			// Iterate over all outgoing edges of this vertex
 			for (LongIterator neighbourIterator = graphData.get(currentVertexId).iterator(); neighbourIterator.hasNext(); ) {
 				long neighbour = neighbourIterator.nextLong();
+				
 				// If a neighbour has not been visited, add it to the queue and set its distance from the root
 				if (!visited.contains(neighbour)) {
 					visited.add(neighbour);
@@ -77,5 +81,4 @@ public class BreadthFirstSearchJob {
 
 		return distances;
 	}
-
 }

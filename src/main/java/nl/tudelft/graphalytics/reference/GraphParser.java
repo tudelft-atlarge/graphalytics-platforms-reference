@@ -84,6 +84,8 @@ public class GraphParser {
 					long source = Long.parseLong(tokens[0]);
 					long destination = Long.parseLong(tokens[1]);
 					graphData.get(source).add(destination);
+					
+					// Add edge in both directions if undirected
 					if (!graphIsDirected) {
 						graphData.get(destination).add(source);
 					}
@@ -92,5 +94,21 @@ public class GraphParser {
 			}
 		}
 	}
+	
+	static public Long2ObjectMap<LongList> convertToUndirected(Long2ObjectMap<LongList> graphData) {
+		Long2ObjectMap<LongList> newGraphData = new Long2ObjectOpenHashMap<>(graphData.size());
 
+		for (long source: graphData.keySet()) {
+			newGraphData.put(source, new LongArrayList());
+		}
+		
+		for (long source: graphData.keySet()) {
+			for (long destination: graphData.get(source)) {
+				newGraphData.get(source).add(destination);
+				newGraphData.get(destination).add(source);
+			}
+		}
+		
+		return newGraphData;
+	}
 }

@@ -13,44 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.tudelft.graphalytics.reference.algorithms.bfs;
+package nl.tudelft.graphalytics.reference.algorithms.cd;
 
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongList;
-import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
+import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionParameters;
 import nl.tudelft.graphalytics.reference.ValidationGraphParser;
 import nl.tudelft.graphalytics.validation.GraphStructure;
-import nl.tudelft.graphalytics.validation.bfs.BreadthFirstSearchOutput;
-import nl.tudelft.graphalytics.validation.bfs.BreadthFirstSearchValidationTest;
-
-import java.util.HashMap;
-import java.util.Map;
+import nl.tudelft.graphalytics.validation.cd.CommunityDetectionOutput;
+import nl.tudelft.graphalytics.validation.cd.CommunityDetectionValidationTest;
 
 /**
- * Validation tests for the reference BFS implementation.
+ * Validation tests for the reference community detection implementation.
  *
- * @author Tim Hegeman
+ * @author Stijn Heldens
  */
-public class BreadthFirstSearchJobTest extends BreadthFirstSearchValidationTest {
+public class CommunityDetectionJobTest extends CommunityDetectionValidationTest {
 
 	@Override
-	public BreadthFirstSearchOutput executeDirectedBreadthFirstSearch(GraphStructure graph,
-			BreadthFirstSearchParameters parameters) throws Exception {
+	public CommunityDetectionOutput executeDirectedCommunityDetection(GraphStructure graph,
+			CommunityDetectionParameters parameters) throws Exception {
 		return execute(graph, parameters, true);
 	}
 
 	@Override
-	public BreadthFirstSearchOutput executeUndirectedBreadthFirstSearch(GraphStructure graph,
-			BreadthFirstSearchParameters parameters) throws Exception {
+	public CommunityDetectionOutput executeUndirectedCommunityDetection(GraphStructure graph,
+			CommunityDetectionParameters parameters) throws Exception {
 		return execute(graph, parameters, false);
 	}
 	
-	private BreadthFirstSearchOutput execute(GraphStructure graph,
-			BreadthFirstSearchParameters parameters, boolean directed) throws Exception {
+	private CommunityDetectionOutput execute(GraphStructure graph, CommunityDetectionParameters parameters,
+			boolean directed) throws Exception {
 		Long2ObjectMap<LongList> graphData = ValidationGraphParser.parseValidationGraph(graph);
-		Long2LongMap output = new BreadthFirstSearchJob(graphData, directed, parameters).run();
-		return new BreadthFirstSearchOutput(output);
+		Long2LongMap output = new CommunityDetectionJob(graphData, parameters).run();
+		return new CommunityDetectionOutput(output);
 	}
-
 }
