@@ -57,7 +57,7 @@ public class LocalClusteringCoefficientJob {
 			}
 			
 			int degree = undirectedGraphData.get(v).size();
-			LOG.debug(v + " " + tri +  " " + degree);
+
 			double result = degree >= 2 ? tri / (degree * (degree - 1.0)) : 0.0;
 			lcc.put(v, result);
 		}
