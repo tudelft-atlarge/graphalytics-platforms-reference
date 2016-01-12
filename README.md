@@ -6,5 +6,5 @@ Please refer to the documentation of the Graphalytics core (`graphalytics` repos
 
 ## Reference-implementation-specific configuration
 
-To be added.
+No configuration required.
 
