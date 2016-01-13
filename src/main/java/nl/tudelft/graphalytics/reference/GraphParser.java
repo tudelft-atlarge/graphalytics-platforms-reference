@@ -111,4 +111,20 @@ public class GraphParser {
 		
 		return newGraphData;
 	}
+
+	static public Long2ObjectMap<LongList> invert(Long2ObjectMap<LongList> graphData) {
+		Long2ObjectMap<LongList> newGraphData = new Long2ObjectOpenHashMap<>(graphData.size());
+
+		for (long source: graphData.keySet()) {
+			newGraphData.put(source, new LongArrayList());
+		}
+
+		for (long source: graphData.keySet()) {
+			for (long destination: graphData.get(source)) {
+				newGraphData.get(destination).add(source);
+			}
+		}
+
+		return newGraphData;
+	}
 }

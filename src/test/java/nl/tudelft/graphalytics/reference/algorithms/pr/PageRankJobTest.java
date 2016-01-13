@@ -49,7 +49,7 @@ public class PageRankJobTest extends PageRankValidationTest {
 	private PageRankOutput execute(GraphStructure graph, PageRankParameters parameters, boolean directed)
 			throws Exception {
 		Long2ObjectMap<LongList> graphData = ValidationGraphParser.parseValidationGraph(graph);
-		Long2DoubleMap output = new PageRankJob(graphData, parameters).run();
+		Long2DoubleMap output = new PageRankJob(graphData, directed, parameters).run();
 		return new PageRankOutput(output);
 	}
 

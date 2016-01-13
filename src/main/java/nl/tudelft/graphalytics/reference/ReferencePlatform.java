@@ -60,7 +60,7 @@ public class ReferencePlatform implements Platform {
 				new ConnectedComponentsJob(graphEdges, graphDirected).run();
 				break;
 			case PAGERANK:
-				new PageRankJob(graphEdges, (PageRankParameters)parameters).run();
+				new PageRankJob(graphEdges, graphDirected, (PageRankParameters)parameters).run();
 				break;
 			case STATS:
 				new LocalClusteringCoefficientJob(graphEdges, graphDirected).run();

@@ -7,7 +7,6 @@ import it.unimi.dsi.fastutil.longs.AbstractLongPriorityQueue;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nl.tudelft.graphalytics.reference.GraphParser;
@@ -31,8 +30,6 @@ public class ConnectedComponentsJob {
 
 		Long2LongMap vertex2component = new Long2LongOpenHashMap(graphData.size());
 		long numComponents = 0;
-		
-		Long2ObjectMap<LongList> undirected = new Long2ObjectOpenHashMap<>();
 		
 		for (long v: graphData.keySet()) {
 			// skip vertex if already assigned to component
