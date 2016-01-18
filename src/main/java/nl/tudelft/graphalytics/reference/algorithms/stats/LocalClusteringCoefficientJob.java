@@ -18,9 +18,9 @@ public class LocalClusteringCoefficientJob {
 	private final Long2ObjectMap<LongSet> neighbourhoodData;
 
 	public LocalClusteringCoefficientJob(Long2ObjectMap<LongList> graphData, boolean directed) {
-		this.outgoingEdgeData = removeDuplicateNeighbors(graphData);
+		this.outgoingEdgeData = removeDuplicateNeighbours(graphData);
 		this.neighbourhoodData = directed ?
-				removeDuplicateNeighbors(GraphParser.convertToUndirected(graphData)) :
+				removeDuplicateNeighbours(GraphParser.convertToUndirected(graphData)) :
 				outgoingEdgeData;
 	}
 
@@ -31,19 +31,19 @@ public class LocalClusteringCoefficientJob {
 		
 		for (long v: outgoingEdgeData.keySet()) {
 			int tri = 0;
-			LongSet v_neighbors = neighbourhoodData.get(v);
+			LongSet v_neighbours = neighbourhoodData.get(v);
 			
-			for (long u: v_neighbors) {
-				LongSet u_neighbors = outgoingEdgeData.get(u);
+			for (long u: v_neighbours) {
+				LongSet u_neighbours = outgoingEdgeData.get(u);
 
-				for (long neighbour : v_neighbors) {
-					if (u_neighbors.contains(neighbour)) {
+				for (long neighbour : v_neighbours) {
+					if (u_neighbours.contains(neighbour)) {
 						tri++;
 					}
 				}
 			}
 			
-			int degree = v_neighbors.size();
+			int degree = v_neighbours.size();
 
 			double result = degree >= 2 ? tri / (degree * (degree - 1.0)) : 0.0;
 			lcc.put(v, result);
@@ -54,11 +54,11 @@ public class LocalClusteringCoefficientJob {
 		return lcc;
 	}
 	
-	static private Long2ObjectMap<LongSet> removeDuplicateNeighbors(Long2ObjectMap<LongList> graphData) {
+	static private Long2ObjectMap<LongSet> removeDuplicateNeighbours(Long2ObjectMap<LongList> graphData) {
 		Long2ObjectMap<LongSet> uniqueNeighbours = new Long2ObjectOpenHashMap<>(graphData.size());
 		for (long v: graphData.keySet()) {
-			LongList neighbors = graphData.get(v);
-			LongSet uniqueNeighboursForVertex = new LongOpenHashSet(neighbors);
+			LongList neighbours = graphData.get(v);
+			LongSet uniqueNeighboursForVertex = new LongOpenHashSet(neighbours);
 			uniqueNeighbours.put(v, uniqueNeighboursForVertex);
 		}
 		return uniqueNeighbours;
