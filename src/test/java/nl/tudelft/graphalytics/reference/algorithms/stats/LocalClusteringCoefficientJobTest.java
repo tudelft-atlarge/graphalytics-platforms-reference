@@ -20,8 +20,8 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nl.tudelft.graphalytics.reference.ValidationGraphParser;
 import nl.tudelft.graphalytics.validation.GraphStructure;
-import nl.tudelft.graphalytics.validation.stats.LocalClusteringCoefficientOutput;
-import nl.tudelft.graphalytics.validation.stats.LocalClusteringCoefficientValidationTest;;
+import nl.tudelft.graphalytics.validation.algorithms.stats.LocalClusteringCoefficientOutput;
+import nl.tudelft.graphalytics.validation.algorithms.stats.LocalClusteringCoefficientValidationTest;;
 
 /**
  * Validation tests for the reference local clustering coefficient calculation implementation.

@@ -21,8 +21,8 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionParameters;
 import nl.tudelft.graphalytics.reference.ValidationGraphParser;
 import nl.tudelft.graphalytics.validation.GraphStructure;
-import nl.tudelft.graphalytics.validation.cd.CommunityDetectionOutput;
-import nl.tudelft.graphalytics.validation.cd.CommunityDetectionValidationTest;
+import nl.tudelft.graphalytics.validation.algorithms.cd.CommunityDetectionOutput;
+import nl.tudelft.graphalytics.validation.algorithms.cd.CommunityDetectionValidationTest;
 
 /**
  * Validation tests for the reference community detection implementation.

@@ -21,11 +21,8 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
 import nl.tudelft.graphalytics.reference.ValidationGraphParser;
 import nl.tudelft.graphalytics.validation.GraphStructure;
-import nl.tudelft.graphalytics.validation.bfs.BreadthFirstSearchOutput;
-import nl.tudelft.graphalytics.validation.bfs.BreadthFirstSearchValidationTest;
-
-import java.util.HashMap;
-import java.util.Map;
+import nl.tudelft.graphalytics.validation.algorithms.bfs.BreadthFirstSearchOutput;
+import nl.tudelft.graphalytics.validation.algorithms.bfs.BreadthFirstSearchValidationTest;
 
 /**
  * Validation tests for the reference BFS implementation.

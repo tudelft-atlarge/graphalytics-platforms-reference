@@ -15,16 +15,13 @@
  */
 package nl.tudelft.graphalytics.reference.algorithms.conn;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nl.tudelft.graphalytics.reference.ValidationGraphParser;
 import nl.tudelft.graphalytics.validation.GraphStructure;
-import nl.tudelft.graphalytics.validation.conn.ConnectedComponentsOutput;
-import nl.tudelft.graphalytics.validation.conn.ConnectedComponentsValidationTest;
+import nl.tudelft.graphalytics.validation.algorithms.conn.ConnectedComponentsOutput;
+import nl.tudelft.graphalytics.validation.algorithms.conn.ConnectedComponentsValidationTest;
 
 /**
  * Validation tests for the reference connected components implementation.
