@@ -45,13 +45,7 @@ public class LocalClusteringCoefficientJobTest extends LocalClusteringCoefficien
 	private LocalClusteringCoefficientOutput execute(GraphStructure graph, boolean directed) throws Exception {
 		Long2ObjectMap<LongList> graphData = ValidationGraphParser.parseValidationGraph(graph);
 		Long2DoubleMap output = new LocalClusteringCoefficientJob(graphData, directed).run();
-		
-		double sum = 0.0;
-		for (double v: output.values()) {
-			sum += v;
-		}
-		
-		return new LocalClusteringCoefficientOutput(output, sum / graph.getVertices().size());
+		return new LocalClusteringCoefficientOutput(output);
 	}
 
 }
