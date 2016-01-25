@@ -21,13 +21,13 @@ import nl.tudelft.graphalytics.Platform;
 import nl.tudelft.graphalytics.PlatformExecutionException;
 import nl.tudelft.graphalytics.domain.*;
 import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
-import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionParameters;
+import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionLPParameters;
 import nl.tudelft.graphalytics.domain.algorithms.PageRankParameters;
 import nl.tudelft.graphalytics.reference.algorithms.bfs.BreadthFirstSearchJob;
-import nl.tudelft.graphalytics.reference.algorithms.cd.CommunityDetectionJob;
-import nl.tudelft.graphalytics.reference.algorithms.conn.ConnectedComponentsJob;
+import nl.tudelft.graphalytics.reference.algorithms.cdlp.CommunityDetectionLPJob;
+import nl.tudelft.graphalytics.reference.algorithms.wcc.WeaklyConnectedComponentsJob;
 import nl.tudelft.graphalytics.reference.algorithms.pr.PageRankJob;
-import nl.tudelft.graphalytics.reference.algorithms.stats.LocalClusteringCoefficientJob;
+import nl.tudelft.graphalytics.reference.algorithms.lcc.LocalClusteringCoefficientJob;
 
 /**
  * Reference implementation of the Graphalytics benchmark.
@@ -53,16 +53,16 @@ public class ReferencePlatform implements Platform {
 			case BFS:
 				new BreadthFirstSearchJob(graphEdges, graphDirected, (BreadthFirstSearchParameters)parameters).run();
 				break;
-			case CD:
-				new CommunityDetectionJob(graphEdges, (CommunityDetectionParameters)parameters).run();
+			case CDLP:
+				new CommunityDetectionLPJob(graphEdges, (CommunityDetectionLPParameters)parameters).run();
 				break;
-			case CONN:
-				new ConnectedComponentsJob(graphEdges, graphDirected).run();
+			case WCC:
+				new WeaklyConnectedComponentsJob(graphEdges, graphDirected).run();
 				break;
-			case PAGERANK:
+			case PR:
 				new PageRankJob(graphEdges, graphDirected, (PageRankParameters)parameters).run();
 				break;
-			case STATS:
+			case LCC:
 				new LocalClusteringCoefficientJob(graphEdges, graphDirected).run();
 				break;
 			default:

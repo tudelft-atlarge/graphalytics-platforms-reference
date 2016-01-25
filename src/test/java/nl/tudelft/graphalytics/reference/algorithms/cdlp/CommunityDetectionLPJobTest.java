@@ -13,40 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.tudelft.graphalytics.reference.algorithms.cd;
+package nl.tudelft.graphalytics.reference.algorithms.cdlp;
 
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongList;
-import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionParameters;
+import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionLPParameters;
 import nl.tudelft.graphalytics.reference.ValidationGraphParser;
 import nl.tudelft.graphalytics.validation.GraphStructure;
-import nl.tudelft.graphalytics.validation.algorithms.cd.CommunityDetectionOutput;
-import nl.tudelft.graphalytics.validation.algorithms.cd.CommunityDetectionValidationTest;
+import nl.tudelft.graphalytics.validation.algorithms.cdlp.CommunityDetectionLPOutput;
+import nl.tudelft.graphalytics.validation.algorithms.cdlp.CommunityDetectionLPValidationTest;
 
 /**
  * Validation tests for the reference community detection implementation.
  *
  * @author Stijn Heldens
  */
-public class CommunityDetectionJobTest extends CommunityDetectionValidationTest {
+public class CommunityDetectionLPJobTest extends CommunityDetectionLPValidationTest {
 
 	@Override
-	public CommunityDetectionOutput executeDirectedCommunityDetection(GraphStructure graph,
-			CommunityDetectionParameters parameters) throws Exception {
+	public CommunityDetectionLPOutput executeDirectedCommunityDetection(GraphStructure graph,
+			CommunityDetectionLPParameters parameters) throws Exception {
 		return execute(graph, parameters, true);
 	}
 
 	@Override
-	public CommunityDetectionOutput executeUndirectedCommunityDetection(GraphStructure graph,
-			CommunityDetectionParameters parameters) throws Exception {
+	public CommunityDetectionLPOutput executeUndirectedCommunityDetection(GraphStructure graph,
+			CommunityDetectionLPParameters parameters) throws Exception {
 		return execute(graph, parameters, false);
 	}
 	
-	private CommunityDetectionOutput execute(GraphStructure graph, CommunityDetectionParameters parameters,
+	private CommunityDetectionLPOutput execute(GraphStructure graph, CommunityDetectionLPParameters parameters,
 			boolean directed) throws Exception {
 		Long2ObjectMap<LongList> graphData = ValidationGraphParser.parseValidationGraph(graph);
-		Long2LongMap output = new CommunityDetectionJob(graphData, parameters).run();
-		return new CommunityDetectionOutput(output);
+		Long2LongMap output = new CommunityDetectionLPJob(graphData, parameters).run();
+		return new CommunityDetectionLPOutput(output);
 	}
 }

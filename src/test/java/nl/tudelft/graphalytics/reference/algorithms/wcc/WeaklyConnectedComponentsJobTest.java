@@ -13,39 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.tudelft.graphalytics.reference.algorithms.stats;
+package nl.tudelft.graphalytics.reference.algorithms.wcc;
 
-import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nl.tudelft.graphalytics.reference.ValidationGraphParser;
 import nl.tudelft.graphalytics.validation.GraphStructure;
-import nl.tudelft.graphalytics.validation.algorithms.stats.LocalClusteringCoefficientOutput;
-import nl.tudelft.graphalytics.validation.algorithms.stats.LocalClusteringCoefficientValidationTest;;
+import nl.tudelft.graphalytics.validation.algorithms.wcc.WeaklyConnectedComponentsOutput;
+import nl.tudelft.graphalytics.validation.algorithms.wcc.WeaklyConnectedComponentsValidationTest;
 
 /**
- * Validation tests for the reference local clustering coefficient calculation implementation.
+ * Validation tests for the reference connected components implementation.
  *
  * @author Stijn Heldens
  */
-public class LocalClusteringCoefficientJobTest extends LocalClusteringCoefficientValidationTest {
+public class WeaklyConnectedComponentsJobTest extends WeaklyConnectedComponentsValidationTest {
 
 	@Override
-	public LocalClusteringCoefficientOutput executeDirectedLocalClusteringCoefficient(GraphStructure graph)
-			throws Exception {
+	public WeaklyConnectedComponentsOutput executeDirectedConnectedComponents(GraphStructure graph) throws Exception {
 		return execute(graph, true);
 	}
 
 	@Override
-	public LocalClusteringCoefficientOutput executeUndirectedLocalClusteringCoefficient(GraphStructure graph)
-			throws Exception {
+	public WeaklyConnectedComponentsOutput executeUndirectedConnectedComponents(GraphStructure graph) throws Exception {
 		return execute(graph, false);
 	}
 	
-	private LocalClusteringCoefficientOutput execute(GraphStructure graph, boolean directed) throws Exception {
+	private WeaklyConnectedComponentsOutput execute(GraphStructure graph, boolean directed) throws Exception {
 		Long2ObjectMap<LongList> graphData = ValidationGraphParser.parseValidationGraph(graph);
-		Long2DoubleMap output = new LocalClusteringCoefficientJob(graphData, directed).run();
-		return new LocalClusteringCoefficientOutput(output);
+		Long2LongMap output = new WeaklyConnectedComponentsJob(graphData, directed).run();
+		return new WeaklyConnectedComponentsOutput(output);
 	}
-
 }

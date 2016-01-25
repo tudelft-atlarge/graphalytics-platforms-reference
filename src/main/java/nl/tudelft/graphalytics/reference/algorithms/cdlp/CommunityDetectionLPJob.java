@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.tudelft.graphalytics.reference.algorithms.cd;
+package nl.tudelft.graphalytics.reference.algorithms.cdlp;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +24,7 @@ import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongList;
-import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionParameters;
+import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionLPParameters;
 import nl.tudelft.graphalytics.reference.GraphParser;
 
 /**
@@ -32,13 +32,13 @@ import nl.tudelft.graphalytics.reference.GraphParser;
  *
  * @author Stijn Heldens
  */
-public class CommunityDetectionJob {
+public class CommunityDetectionLPJob {
 	private static final Logger LOG = LogManager.getLogger();
 
 	private final Long2ObjectMap<LongList> graphData;
-	private final CommunityDetectionParameters parameters;
+	private final CommunityDetectionLPParameters parameters;
 
-	public CommunityDetectionJob(Long2ObjectMap<LongList> graphData, CommunityDetectionParameters parameters) {
+	public CommunityDetectionLPJob(Long2ObjectMap<LongList> graphData, CommunityDetectionLPParameters parameters) {
 		this.graphData = GraphParser.convertToUndirected(graphData);
 		this.parameters = parameters;
 	}
