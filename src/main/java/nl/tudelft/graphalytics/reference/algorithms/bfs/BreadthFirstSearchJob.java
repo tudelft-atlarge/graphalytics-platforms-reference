@@ -15,12 +15,17 @@
  */
 package nl.tudelft.graphalytics.reference.algorithms.bfs;
 
-import it.unimi.dsi.fastutil.longs.*;
-import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
-import nl.tudelft.graphalytics.reference.GraphParser;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import it.unimi.dsi.fastutil.longs.AbstractLongPriorityQueue;
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
+import nl.tudelft.graphalytics.reference.GraphParser;
 
 /**
  * Reference implementation of the Breadth First Search algorithm.
@@ -33,11 +38,11 @@ public class BreadthFirstSearchJob {
 
 	private static final long MAX_DISTANCE = Long.MAX_VALUE;
 
-	private final Long2ObjectMap<LongList> graphData;
+	private final GraphParser graph;
 	private final BreadthFirstSearchParameters parameters;
 
-	public BreadthFirstSearchJob(Long2ObjectMap<LongList> graphData, boolean directed, BreadthFirstSearchParameters parameters) {
-		this.graphData = !directed ? GraphParser.convertToUndirected(graphData) : graphData;
+	public BreadthFirstSearchJob(GraphParser graph, BreadthFirstSearchParameters parameters) {
+		this.graph = graph;
 		this.parameters = parameters;
 	}
 
@@ -45,8 +50,8 @@ public class BreadthFirstSearchJob {
 		LOG.debug("- Starting Breadth First Search algorithm");
 
 		// Initialize distances
-		Long2LongMap distances = new Long2LongOpenHashMap(graphData.size());
-		for (long v: graphData.keySet()) {
+		Long2LongMap distances = new Long2LongOpenHashMap(graph.getNumberOfVertices());
+		for (long v: graph.getVertices()) {
 			distances.put(v, MAX_DISTANCE);
 		}
 		distances.put(parameters.getSourceVertex(), 0L);
@@ -63,11 +68,10 @@ public class BreadthFirstSearchJob {
 		while (!queue.isEmpty()) {
 			long currentVertexId = queue.dequeueLong();
 			long currentVertexDistance = distances.get(currentVertexId);
-			
+
 			// Iterate over all outgoing edges of this vertex
-			for (LongIterator neighbourIterator = graphData.get(currentVertexId).iterator(); neighbourIterator.hasNext(); ) {
-				long neighbour = neighbourIterator.nextLong();
-				
+			for (long neighbour: graph.getNeighbors(currentVertexId)) {
+
 				// If a neighbour has not been visited, add it to the queue and set its distance from the root
 				if (!visited.contains(neighbour)) {
 					visited.add(neighbour);

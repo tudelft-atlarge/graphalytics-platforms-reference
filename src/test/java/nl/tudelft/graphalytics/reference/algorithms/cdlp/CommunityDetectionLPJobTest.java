@@ -16,10 +16,8 @@
 package nl.tudelft.graphalytics.reference.algorithms.cdlp;
 
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.LongList;
 import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionLPParameters;
-import nl.tudelft.graphalytics.reference.ValidationGraphParser;
+import nl.tudelft.graphalytics.reference.GraphParser;
 import nl.tudelft.graphalytics.validation.GraphStructure;
 import nl.tudelft.graphalytics.validation.algorithms.cdlp.CommunityDetectionLPOutput;
 import nl.tudelft.graphalytics.validation.algorithms.cdlp.CommunityDetectionLPValidationTest;
@@ -42,10 +40,10 @@ public class CommunityDetectionLPJobTest extends CommunityDetectionLPValidationT
 			CommunityDetectionLPParameters parameters) throws Exception {
 		return execute(graph, parameters, false);
 	}
-	
+
 	private CommunityDetectionLPOutput execute(GraphStructure graph, CommunityDetectionLPParameters parameters,
 			boolean directed) throws Exception {
-		Long2ObjectMap<LongList> graphData = ValidationGraphParser.parseValidationGraph(graph);
+		GraphParser graphData = GraphParser.parseGraphStructure(graph);
 		Long2LongMap output = new CommunityDetectionLPJob(graphData, parameters).run();
 		return new CommunityDetectionLPOutput(output);
 	}

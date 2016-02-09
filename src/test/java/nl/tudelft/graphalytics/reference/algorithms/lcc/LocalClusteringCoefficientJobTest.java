@@ -16,9 +16,7 @@
 package nl.tudelft.graphalytics.reference.algorithms.lcc;
 
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.LongList;
-import nl.tudelft.graphalytics.reference.ValidationGraphParser;
+import nl.tudelft.graphalytics.reference.GraphParser;
 import nl.tudelft.graphalytics.validation.GraphStructure;
 import nl.tudelft.graphalytics.validation.algorithms.lcc.LocalClusteringCoefficientOutput;
 import nl.tudelft.graphalytics.validation.algorithms.lcc.LocalClusteringCoefficientValidationTest;;
@@ -41,10 +39,10 @@ public class LocalClusteringCoefficientJobTest extends LocalClusteringCoefficien
 			throws Exception {
 		return execute(graph, false);
 	}
-	
+
 	private LocalClusteringCoefficientOutput execute(GraphStructure graph, boolean directed) throws Exception {
-		Long2ObjectMap<LongList> graphData = ValidationGraphParser.parseValidationGraph(graph);
-		Long2DoubleMap output = new LocalClusteringCoefficientJob(graphData, directed).run();
+		GraphParser graphData = GraphParser.parseGraphStructure(graph);
+		Long2DoubleMap output = new LocalClusteringCoefficientJob(graphData).run();
 		return new LocalClusteringCoefficientOutput(output);
 	}
 

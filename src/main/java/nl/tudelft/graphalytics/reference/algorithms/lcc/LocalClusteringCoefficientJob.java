@@ -15,10 +15,15 @@
  */
 package nl.tudelft.graphalytics.reference.algorithms.lcc;
 
-import it.unimi.dsi.fastutil.longs.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
+import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import nl.tudelft.graphalytics.reference.GraphParser;
 
 /**
@@ -29,53 +34,55 @@ import nl.tudelft.graphalytics.reference.GraphParser;
 public class LocalClusteringCoefficientJob {
 	private static final Logger LOG = LogManager.getLogger();
 
-	private final Long2ObjectMap<LongSet> outgoingEdgeData;
-	private final Long2ObjectMap<LongSet> neighbourhoodData;
+	private final GraphParser graph;
 
-	public LocalClusteringCoefficientJob(Long2ObjectMap<LongList> graphData, boolean directed) {
-		this.outgoingEdgeData = removeDuplicateNeighbours(graphData);
-		this.neighbourhoodData = directed ?
-				removeDuplicateNeighbours(GraphParser.convertToUndirected(graphData)) :
-				outgoingEdgeData;
+	public LocalClusteringCoefficientJob(GraphParser graph) {
+		this.graph = graph;
 	}
 
 	public Long2DoubleMap run() {
 		LOG.debug("- Starting local clustering coefficient calculation");
-		
-		Long2DoubleMap lcc = new Long2DoubleOpenHashMap(outgoingEdgeData.size());
-		
-		for (long v: outgoingEdgeData.keySet()) {
-			int tri = 0;
-			LongSet v_neighbours = neighbourhoodData.get(v);
-			
-			for (long u: v_neighbours) {
-				LongSet u_neighbours = outgoingEdgeData.get(u);
 
-				for (long neighbour : v_neighbours) {
+		Long2ObjectMap<LongSet> outNeighbors = new Long2ObjectOpenHashMap<>();
+		Long2ObjectMap<LongSet> neighbors = new Long2ObjectOpenHashMap<>();
+
+		for (long v: graph.getVertices()) {
+			outNeighbors.put(v, new LongOpenHashSet());
+			neighbors.put(v, new LongOpenHashSet());
+		}
+
+		for (long v: graph.getVertices()) {
+			for (long u: graph.getNeighbors(v)) {
+				outNeighbors.get(v).add(u);
+				neighbors.get(u).add(v);
+				neighbors.get(v).add(u);
+			}
+		}
+
+		Long2DoubleMap lcc = new Long2DoubleOpenHashMap();
+
+		for (long v: graph.getVertices()) {
+			int tri = 0;
+			LongSet v_neighbours = neighbors.get(v);
+
+			for (long u: v_neighbours) {
+				LongSet u_neighbours = outNeighbors.get(u);
+
+				for (long neighbour: v_neighbours) {
 					if (u_neighbours.contains(neighbour)) {
 						tri++;
 					}
 				}
 			}
-			
+
 			int degree = v_neighbours.size();
 
 			double result = degree >= 2 ? tri / (degree * (degree - 1.0)) : 0.0;
 			lcc.put(v, result);
 		}
-		
+
 		LOG.debug("- Finished local clustering coefficient calculation");
-		
+
 		return lcc;
-	}
-	
-	static private Long2ObjectMap<LongSet> removeDuplicateNeighbours(Long2ObjectMap<LongList> graphData) {
-		Long2ObjectMap<LongSet> uniqueNeighbours = new Long2ObjectOpenHashMap<>(graphData.size());
-		for (long v: graphData.keySet()) {
-			LongList neighbours = graphData.get(v);
-			LongSet uniqueNeighboursForVertex = new LongOpenHashSet(neighbours);
-			uniqueNeighbours.put(v, uniqueNeighboursForVertex);
-		}
-		return uniqueNeighbours;
 	}
 }

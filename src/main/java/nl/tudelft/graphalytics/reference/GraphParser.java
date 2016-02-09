@@ -15,15 +15,22 @@
  */
 package nl.tudelft.graphalytics.reference;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import nl.tudelft.graphalytics.domain.Graph;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import nl.tudelft.graphalytics.domain.PropertyType;
+import nl.tudelft.graphalytics.validation.GraphStructure;
 
 /**
  * Graph parser for Graphalytics's EVL graph format.
@@ -31,100 +38,198 @@ import java.io.IOException;
  * @author Tim Hegeman
  */
 public class GraphParser {
+	private GraphParser reversedGraph;
+	private GraphParser undirectedGraph;
 
-	private final String vertexFilePath;
-	private final String edgeFilePath;
-	private final boolean graphIsDirected;
-	private Long2ObjectMap<LongList> graphData;
+	private final LongSet vertices;
+	private final Long2ObjectMap<List<Object>> vertexProperties;
 
-	public GraphParser(Graph graph) {
-		this.vertexFilePath = graph.getVertexFilePath();
-		this.edgeFilePath = graph.getEdgeFilePath();
-		this.graphIsDirected = graph.getGraphFormat().isDirected();
-		this.graphData = null;
+	private final Long2ObjectMap<LongList> edges;
+	private final Long2ObjectMap<List<List<Object>>> edgeProperties;
+
+	public GraphParser(LongSet vertices, Long2ObjectMap<List<Object>> vertexProperties,
+			Long2ObjectMap<LongList> edges, Long2ObjectMap<List<List<Object>>> edgeProperties) {
+		this.vertices = vertices;
+		this.edges = edges;
+		this.vertexProperties = vertexProperties;
+		this.edgeProperties = edgeProperties;
 	}
 
-	/**
-	 * Performs the parsing operation on the graph specified in the class constructor. The result is an adjacency list
-	 * representation of the graph, i.e. for each vertex v a list is constructed with the ids of all vertices for which
-	 * an edge from v to that vertex exists.
-	 *
-	 * @return an adjacency list representation of the graph
-	 * @throws IOException
-	 */
-	public Long2ObjectMap<LongList> parse() throws IOException {
-		if (graphData != null) {
-			return graphData;
+	public int getNumberOfVertices() {
+		return vertices.size();
+	}
+
+	public LongSet getVertices() {
+		return vertices;
+	}
+
+	public LongList getNeighbors(long vertex) {
+		return edges.get(vertex);
+	}
+
+	public Object getVertexProperty(long vertex, int propIndex) {
+		return vertexProperties.get(vertex).get(propIndex);
+	}
+
+	public Object getEdgeProperty(long vertex, int neighborIndex, int propIndex) {
+		return edgeProperties.get(vertex).get(neighborIndex).get(propIndex);
+	}
+
+	private GraphParser generateReverseGraph(boolean keepOriginal) {
+		Long2ObjectMap<LongList> revEdges = new Long2ObjectOpenHashMap<>();
+		Long2ObjectMap<List<List<Object>>> revEdgeProps = new Long2ObjectOpenHashMap<>();
+
+		for (long v: vertices) {
+			revEdges.put(v, new LongArrayList());
+			revEdgeProps.put(v, new ArrayList<List<Object>>());
 		}
 
-		graphData = new Long2ObjectOpenHashMap<>();
-		parseVertices();
-		parseEdges();
-		return graphData;
-	}
+		for (long v: vertices) {
+			LongList neighbors = edges.get(v);
+			List<List<Object>> neighborProps = edgeProperties.get(v);
 
-	private void parseVertices() throws IOException {
-		try (BufferedReader vertexReader = new BufferedReader(new FileReader(vertexFilePath))) {
-			String line = vertexReader.readLine();
-			while (line != null) {
-				if (!line.isEmpty()) {
-					graphData.put(Long.parseLong(line), new LongArrayList());
+			for (int i = 0; i < neighbors.size(); i++) {
+				long u = neighbors.getLong(i);
+				List<Object> props = neighborProps.get(i);
+
+				if (keepOriginal) {
+					revEdges.get(v).add(u);
+					revEdgeProps.get(v).add(props);
 				}
-				line = vertexReader.readLine();
+
+				revEdges.get(u).add(v);
+				revEdgeProps.get(u).add(props);
 			}
 		}
+
+		return new GraphParser(vertices, vertexProperties, revEdges, revEdgeProps);
 	}
 
-	private void parseEdges() throws IOException {
-		try (BufferedReader edgeReader = new BufferedReader(new FileReader(edgeFilePath))) {
-			String line = edgeReader.readLine();
-			while (line != null) {
-				if (!line.isEmpty()) {
-					String[] tokens = line.split(" ");
-					long source = Long.parseLong(tokens[0]);
-					long destination = Long.parseLong(tokens[1]);
-					graphData.get(source).add(destination);
-					
-					// Add edge in both directions if undirected
-					if (!graphIsDirected) {
-						graphData.get(destination).add(source);
-					}
+	public GraphParser toReversed() {
+		if (reversedGraph == null) {
+			reversedGraph = generateReverseGraph(false);
+		}
+
+		return reversedGraph;
+	}
+
+	public GraphParser toUndirected() {
+		if (undirectedGraph == null) {
+			undirectedGraph = generateReverseGraph(true);
+		}
+
+		return undirectedGraph;
+	}
+
+	private static void parseVertices(String file,
+			List<PropertyType> propTypes,
+			LongSet vertices,
+			Long2ObjectMap<List<Object>> vProp,
+			Long2ObjectMap<LongList> edges,
+			Long2ObjectMap<List<List<Object>>> eProp) throws IOException {
+
+		try (BufferedReader r = new BufferedReader(new FileReader(file))) {
+			String line;
+			while ((line = r.readLine()) != null) {
+				line = line.trim();
+
+				if (line.isEmpty()) {
+					continue;
 				}
-				line = edgeReader.readLine();
+
+				String[] parts = line.split(" *");
+				long id = Long.parseLong(parts[0]);
+
+				vertices.add(id);
+				vProp.put(id, parseProperties(propTypes, parts, 1));
+				edges.put(id, new LongArrayList());
+				eProp.put(id, new ArrayList<List<Object>>());
 			}
 		}
 	}
-	
-	static public Long2ObjectMap<LongList> convertToUndirected(Long2ObjectMap<LongList> graphData) {
-		Long2ObjectMap<LongList> newGraphData = new Long2ObjectOpenHashMap<>(graphData.size());
 
-		for (long source: graphData.keySet()) {
-			newGraphData.put(source, new LongArrayList());
-		}
-		
-		for (long source: graphData.keySet()) {
-			for (long destination: graphData.get(source)) {
-				newGraphData.get(source).add(destination);
-				newGraphData.get(destination).add(source);
+	private static void parseEdges(String file,
+			List<PropertyType> propTypes,
+			Long2ObjectMap<LongList> edges,
+			Long2ObjectMap<List<List<Object>>> eProp) throws IOException {
+
+		try (BufferedReader r = new BufferedReader(new FileReader(file))) {
+			String line;
+			while ((line = r.readLine()) != null) {
+				line = line.trim();
+
+				if (line.isEmpty()) {
+					continue;
+				}
+
+				String[] parts = line.split(" *");
+				long src = Long.parseLong(parts[0]);
+				long target = Long.parseLong(parts[0]);
+
+				edges.get(src).add(target);
+				eProp.get(src).add(parseProperties(propTypes, parts, 2));
 			}
 		}
-		
-		return newGraphData;
 	}
 
-	static public Long2ObjectMap<LongList> invert(Long2ObjectMap<LongList> graphData) {
-		Long2ObjectMap<LongList> newGraphData = new Long2ObjectOpenHashMap<>(graphData.size());
-
-		for (long source: graphData.keySet()) {
-			newGraphData.put(source, new LongArrayList());
+	private static List<Object> parseProperties(List<PropertyType> types, String[] parts, int offset) throws IOException {
+		if (types.size() != parts.length - offset) {
+			throw new IOException("error while parsing properties, "
+					+ types.size() + " properties expected but got "
+					+ (parts.length - offset) + " properties");
 		}
 
-		for (long source: graphData.keySet()) {
-			for (long destination: graphData.get(source)) {
-				newGraphData.get(destination).add(source);
+		List<Object> props = new ArrayList<Object>();
+
+		for (int i = 0; i < types.size(); i++) {
+			String str = parts[offset + i];
+			PropertyType type = types.get(i);
+
+			if (PropertyType.INTEGER.equals(type)) {
+				props.add(Integer.parseInt(str));
+			} else if (PropertyType.REAL.equals(type)) {
+				props.add(Double.parseDouble(str));
+			} else {
+				throw new IOException("Found unsupported property "
+						+ "type while parsing " + type);
 			}
 		}
 
-		return newGraphData;
+		return props;
+	}
+
+	public static GraphParser parseGraph(Graph graph) throws IOException {
+		LongSet vertices = new LongOpenHashSet();
+		Long2ObjectMap<List<Object>> vProp = new Long2ObjectOpenHashMap<>();
+		Long2ObjectMap<LongList> edges = new Long2ObjectOpenHashMap<>();
+		Long2ObjectMap<List<List<Object>>> eProp = new Long2ObjectOpenHashMap<>();
+
+		parseVertices(graph.getVertexFilePath(), graph.getVertexPropertyTypes(), vertices, vProp, edges, eProp);
+		parseEdges(graph.getEdgeFilePath(), graph.getEdgePropertyTypes(), edges, eProp);
+
+		GraphParser g = new GraphParser(vertices, vProp, edges, eProp);
+		return graph.isDirected() ? g : g.toUndirected();
+	}
+
+	public static GraphParser parseGraphStructure(GraphStructure graph) throws IOException {
+		LongSet vertices = new LongOpenHashSet();
+		Long2ObjectMap<List<Object>> vProp = new Long2ObjectOpenHashMap<>();
+		Long2ObjectMap<LongList> edges = new Long2ObjectOpenHashMap<>();
+		Long2ObjectMap<List<List<Object>>> eProp = new Long2ObjectOpenHashMap<>();
+
+		for (long v: graph.getVertices()) {
+			vertices.add(v);
+			vProp.put(v, Collections.emptyList());
+			edges.put(v, new LongArrayList());
+			eProp.put(v, new ArrayList<List<Object>>());
+
+			for (long u: graph.getEdgesForVertex(v)) {
+				edges.get(v).add(u);
+				eProp.get(v).add(Collections.emptyList());
+			}
+		}
+
+		return new GraphParser(vertices, vProp, edges, eProp);
+
 	}
 }

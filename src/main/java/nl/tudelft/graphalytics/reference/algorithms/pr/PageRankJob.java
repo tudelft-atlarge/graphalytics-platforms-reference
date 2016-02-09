@@ -15,15 +15,11 @@
  */
 package nl.tudelft.graphalytics.reference.algorithms.pr;
 
-import java.util.Arrays;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.LongList;
 import nl.tudelft.graphalytics.domain.algorithms.PageRankParameters;
 import nl.tudelft.graphalytics.reference.GraphParser;
 
@@ -35,32 +31,32 @@ import nl.tudelft.graphalytics.reference.GraphParser;
 public class PageRankJob {
 	private static final Logger LOG = LogManager.getLogger();
 
-	private final Long2ObjectMap<LongList> outGraphData;
-	private final Long2ObjectMap<LongList> inGraphData;
+	private final GraphParser outGraph;
+	private final GraphParser inGraph;
 	private final PageRankParameters parameters;
 
-	public PageRankJob(Long2ObjectMap<LongList> graphData, boolean graphDirected, PageRankParameters parameters) {
+	public PageRankJob(GraphParser graph, PageRankParameters parameters) {
 		// Given graph only stores outgoing edges for each vertex. If graph is directed,
 		// invert all edges to find ingoing edges of each vertex.
-		this.inGraphData = graphDirected ? GraphParser.invert(graphData) : graphData;
-		this.outGraphData = graphData;
+		this.inGraph = graph.toReversed();
+		this.outGraph = graph;
 
 		this.parameters = parameters;
 	}
 
 	public Long2DoubleMap run() {
 		LOG.debug("- Starting PageRank algorithm");
-		
+
 		// Read parameters
-		int numVertices = outGraphData.size();
+		int numVertices = outGraph.getNumberOfVertices();
 		int numIterations = parameters.getNumberOfIterations();
 		double dampingFactor = parameters.getDampingFactor();
-		
+
 		// Initialize values
 		Long2DoubleMap ranks = new Long2DoubleOpenHashMap(numVertices);
 		Long2DoubleMap newRanks = new Long2DoubleOpenHashMap(numVertices);
 
-		for (long v: outGraphData.keySet()) {
+		for (long v: outGraph.getVertices()) {
 			ranks.put(v, 1.0 / numVertices);
 		}
 
@@ -71,32 +67,32 @@ public class PageRankJob {
 			double danglingSum = 0.0;
 
 			// Collect sum of ranks for dangling vertices (i.e., without outgoing edges)
-			for (long v: outGraphData.keySet()) {
-				if (outGraphData.get(v).isEmpty()) {
+			for (long v: outGraph.getVertices()) {
+				if (outGraph.getNeighbors(v).isEmpty()) {
 					danglingSum += ranks.get(v);
 				}
 			}
-			
+
 			// Compute new rank for all vertices
-			for (long v: outGraphData.keySet()) {
+			for (long v: outGraph.getVertices()) {
 				double sum = 0.0;
-				
-				for (long neighbor: inGraphData.get(v)) {
-					sum += ranks.get(neighbor) / outGraphData.get(neighbor).size();
+
+				for (long neighbor: inGraph.getNeighbors(v)) {
+					sum += ranks.get(neighbor) / outGraph.getNeighbors(neighbor).size();
 				}
-				
+
 				double newRank = (1.0 - dampingFactor) / numVertices
 						+ dampingFactor * (sum + danglingSum / numVertices);
 
 				newRanks.put(v, newRank);
 			}
-			
+
 			// Swap prev and next
 			Long2DoubleMap tmp = ranks;
 			ranks = newRanks;
 			newRanks = tmp;
 		}
-		
+
 		LOG.debug("- Finished PageRank algorithm");
 
 		return ranks;

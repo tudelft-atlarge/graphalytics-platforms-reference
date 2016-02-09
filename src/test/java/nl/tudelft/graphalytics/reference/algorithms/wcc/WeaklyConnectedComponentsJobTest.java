@@ -16,9 +16,7 @@
 package nl.tudelft.graphalytics.reference.algorithms.wcc;
 
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.LongList;
-import nl.tudelft.graphalytics.reference.ValidationGraphParser;
+import nl.tudelft.graphalytics.reference.GraphParser;
 import nl.tudelft.graphalytics.validation.GraphStructure;
 import nl.tudelft.graphalytics.validation.algorithms.wcc.WeaklyConnectedComponentsOutput;
 import nl.tudelft.graphalytics.validation.algorithms.wcc.WeaklyConnectedComponentsValidationTest;
@@ -39,10 +37,10 @@ public class WeaklyConnectedComponentsJobTest extends WeaklyConnectedComponentsV
 	public WeaklyConnectedComponentsOutput executeUndirectedConnectedComponents(GraphStructure graph) throws Exception {
 		return execute(graph, false);
 	}
-	
+
 	private WeaklyConnectedComponentsOutput execute(GraphStructure graph, boolean directed) throws Exception {
-		Long2ObjectMap<LongList> graphData = ValidationGraphParser.parseValidationGraph(graph);
-		Long2LongMap output = new WeaklyConnectedComponentsJob(graphData, directed).run();
+		GraphParser graphData = GraphParser.parseGraphStructure(graph);
+		Long2LongMap output = new WeaklyConnectedComponentsJob(graphData).run();
 		return new WeaklyConnectedComponentsOutput(output);
 	}
 }
