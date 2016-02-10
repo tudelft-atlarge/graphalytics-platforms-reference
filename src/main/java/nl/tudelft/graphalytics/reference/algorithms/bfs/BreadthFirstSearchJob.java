@@ -82,7 +82,6 @@ public class BreadthFirstSearchJob {
 		}
 
 		LOG.debug("- Finished Breadth First Search algorithm");
-
 		return distances;
 	}
 }

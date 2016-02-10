@@ -15,6 +15,11 @@
  */
 package nl.tudelft.graphalytics.reference;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Map;
+
 import nl.tudelft.graphalytics.Platform;
 import nl.tudelft.graphalytics.PlatformExecutionException;
 import nl.tudelft.graphalytics.domain.Algorithm;
@@ -25,7 +30,7 @@ import nl.tudelft.graphalytics.domain.PlatformBenchmarkResult;
 import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
 import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionLPParameters;
 import nl.tudelft.graphalytics.domain.algorithms.PageRankParameters;
-import nl.tudelft.graphalytics.domain.algorithms.SingleSourceShortestPathParameters;
+import nl.tudelft.graphalytics.domain.algorithms.SingleSourceShortestPathsParameters;
 import nl.tudelft.graphalytics.reference.algorithms.bfs.BreadthFirstSearchJob;
 import nl.tudelft.graphalytics.reference.algorithms.cdlp.CommunityDetectionLPJob;
 import nl.tudelft.graphalytics.reference.algorithms.lcc.LocalClusteringCoefficientJob;
@@ -48,32 +53,52 @@ public class ReferencePlatform implements Platform {
 		this.graph = GraphParser.parseGraph(graph);
 	}
 
+	private void writeOutput(String path, Map<Long, ? extends Object> output) throws IOException {
+		try (PrintWriter w = new PrintWriter(new FileOutputStream(path))) {
+			for (Map.Entry<Long, ? extends Object> entry: output.entrySet()) {
+				w.print(entry.getKey());
+				w.print(" ");
+				w.print(entry.getValue());
+				w.println();
+			}
+		}
+	}
+
 	@Override
 	public PlatformBenchmarkResult executeAlgorithmOnGraph(Benchmark benchmark) throws PlatformExecutionException {
 		Algorithm algorithm = benchmark.getAlgorithm();
 		Object parameters = benchmark.getAlgorithmParameters();
+		Map<Long, ? extends Object> output;
 
 		switch (algorithm) {
 			case BFS:
-				new BreadthFirstSearchJob(graph, (BreadthFirstSearchParameters)parameters).run();
+				output = new BreadthFirstSearchJob(graph, (BreadthFirstSearchParameters)parameters).run();
 				break;
 			case CDLP:
-				new CommunityDetectionLPJob(graph, (CommunityDetectionLPParameters)parameters).run();
+				output = new CommunityDetectionLPJob(graph, (CommunityDetectionLPParameters)parameters).run();
 				break;
 			case WCC:
-				new WeaklyConnectedComponentsJob(graph).run();
+				output = new WeaklyConnectedComponentsJob(graph).run();
 				break;
 			case PR:
-				new PageRankJob(graph, (PageRankParameters)parameters).run();
+				output = new PageRankJob(graph, (PageRankParameters)parameters).run();
 				break;
 			case LCC:
-				new LocalClusteringCoefficientJob(graph).run();
+				output = new LocalClusteringCoefficientJob(graph).run();
 				break;
 			case SSSP:
-				new SingleSourceShortestPathJob(graph, (SingleSourceShortestPathParameters)parameters).run();
+				output = new SingleSourceShortestPathJob(graph, (SingleSourceShortestPathsParameters)parameters).run();
 				break;
 			default:
 				throw new PlatformExecutionException("Unsupported algorithm: " + algorithm);
+		}
+
+		if (benchmark.isOutputRequired()) {
+			try {
+				writeOutput(benchmark.getOutputPath(), output);
+			} catch(IOException e) {
+				throw new PlatformExecutionException("An error while writing to output file", e);
+			}
 		}
 
 		return new PlatformBenchmarkResult(getPlatformConfiguration());

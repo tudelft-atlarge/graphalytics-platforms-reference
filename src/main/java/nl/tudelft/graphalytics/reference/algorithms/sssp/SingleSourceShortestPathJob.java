@@ -23,7 +23,7 @@ import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import nl.tudelft.graphalytics.domain.algorithms.SingleSourceShortestPathParameters;
+import nl.tudelft.graphalytics.domain.algorithms.SingleSourceShortestPathsParameters;
 import nl.tudelft.graphalytics.reference.GraphParser;
 
 /**
@@ -38,15 +38,15 @@ public class SingleSourceShortestPathJob {
 	private static final double MAX_DISTANCE = Double.POSITIVE_INFINITY;
 
 	private final GraphParser graph;
-	private final SingleSourceShortestPathParameters parameters;
+	private final SingleSourceShortestPathsParameters parameters;
 
-	public SingleSourceShortestPathJob(GraphParser graph, SingleSourceShortestPathParameters parameters) {
+	public SingleSourceShortestPathJob(GraphParser graph, SingleSourceShortestPathsParameters parameters) {
 		this.graph = graph;
 		this.parameters = parameters;
 	}
 
 	public Long2DoubleMap run() {
-		// Basic implementation of Dijkstra's shortests path algorithm
+		// This method presents a basic implementation of Dijkstra's shortest path algorithm.
 		LOG.debug("- Starting Single Source Shortest Path algorithm");
 
 		// Define data structures
@@ -66,13 +66,13 @@ public class SingleSourceShortestPathJob {
 		// Iterate until pending set is empty
 		while (!pending.isEmpty()) {
 			long minVertex = -1;
-			double minDistance = MAX_DISTANCE;
+			double minDist = MAX_DISTANCE;
 
 			// Find vertex in pending set for which distance is minimal
 			for (long v: pending) {
-				if (distances.get(v) < minDistance) {
+				if (distances.get(v) < minDist) {
 					minVertex = v;
-					minDistance = distances.get(v);
+					minDist = distances.get(v);
 				}
 			}
 
@@ -85,16 +85,13 @@ public class SingleSourceShortestPathJob {
 
 			for (int i = 0; i < neighbors.size(); i++) {
 				long neighbor = neighbors.getLong(i);
+				double edgeDist = (Double) graph.getEdgeProperties(minVertex, i).get(0);
+				double newDist = minDist + edgeDist;
 
-				if (!visited.contains(neighbor)) {
-					double edgeDist = (Double) graph.getEdgeProperty(minVertex, i, 0);
-					double newDist = minDistance + edgeDist;
-
-					// If neighbor not in pending set or distance has improved
-					if (!pending.contains(neighbor) || distances.get(neighbor) > newDist) {
-						pending.add(neighbor);
-						distances.put(neighbor, newDist);
-					}
+				// If neighbor not in pending set or distance has improved
+				if (!pending.contains(neighbor) || distances.get(neighbor) > newDist) {
+					pending.add(neighbor);
+					distances.put(neighbor, newDist);
 				}
 			}
 		}

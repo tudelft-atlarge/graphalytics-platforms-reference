@@ -29,7 +29,8 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import nl.tudelft.graphalytics.domain.Graph;
-import nl.tudelft.graphalytics.domain.PropertyType;
+import nl.tudelft.graphalytics.domain.graph.PropertyList;
+import nl.tudelft.graphalytics.domain.graph.PropertyType;
 import nl.tudelft.graphalytics.validation.GraphStructure;
 
 /**
@@ -55,24 +56,53 @@ public class GraphParser {
 		this.edgeProperties = edgeProperties;
 	}
 
+	/**
+	 * Get number of vertices of this graph.
+	 *
+	 * @return The number of vertices.
+	 */
 	public int getNumberOfVertices() {
 		return vertices.size();
 	}
 
+	/**
+	 * Get the vertex ids of this graph.
+	 *
+	 * @return The vertex ids
+	 */
 	public LongSet getVertices() {
 		return vertices;
 	}
 
+	/**
+	 * Get the ids of the outgoing neighbors of a vertex.
+	 *
+	 * @param vertex The vertex to get the neighbors of
+	 * @return The neighbor ids.
+	 */
 	public LongList getNeighbors(long vertex) {
 		return edges.get(vertex);
 	}
 
-	public Object getVertexProperty(long vertex, int propIndex) {
-		return vertexProperties.get(vertex).get(propIndex);
+	/**
+	 * Get the properties of a vertex
+	 *
+	 * @param vertex The vertex.
+	 * @return The list of property values.
+	 */
+	public List<Object> getVertexProperties(long vertex) {
+		return vertexProperties.get(vertex);
 	}
 
-	public Object getEdgeProperty(long vertex, int neighborIndex, int propIndex) {
-		return edgeProperties.get(vertex).get(neighborIndex).get(propIndex);
+	/**
+	 * Get the edge properties of the outgoing edge towards the n-th neighbor of a vertex.
+	 *
+	 * @param vertex The source vertex of the edge.
+	 * @param neighborIndex The index of the neighbor.
+	 * @return The edge properties.
+	 */
+	public List<Object> getEdgeProperties(long vertex, int neighborIndex) {
+		return edgeProperties.get(vertex).get(neighborIndex);
 	}
 
 	private GraphParser generateReverseGraph(boolean keepOriginal) {
@@ -105,24 +135,37 @@ public class GraphParser {
 		return new GraphParser(vertices, vertexProperties, revEdges, revEdgeProps);
 	}
 
+	/**
+	 * Returns a reversed graph of the current graph (i.e., all edges are inverted).
+	 *
+	 * @return The reversed graph.
+	 */
 	public GraphParser toReversed() {
 		if (reversedGraph == null) {
 			reversedGraph = generateReverseGraph(false);
+			reversedGraph.reversedGraph = this;
 		}
 
 		return reversedGraph;
 	}
 
+	/**
+	 * Return an undirected graph of the current graph by duplicating all
+	 * edges in both directions.
+	 *
+	 * @return The undirected graph
+	 */
 	public GraphParser toUndirected() {
 		if (undirectedGraph == null) {
 			undirectedGraph = generateReverseGraph(true);
+			undirectedGraph.undirectedGraph = undirectedGraph;
 		}
 
 		return undirectedGraph;
 	}
 
 	private static void parseVertices(String file,
-			List<PropertyType> propTypes,
+			PropertyList propTypes,
 			LongSet vertices,
 			Long2ObjectMap<List<Object>> vProp,
 			Long2ObjectMap<LongList> edges,
@@ -137,7 +180,7 @@ public class GraphParser {
 					continue;
 				}
 
-				String[] parts = line.split(" *");
+				String[] parts = line.split("[ \t]+");
 				long id = Long.parseLong(parts[0]);
 
 				vertices.add(id);
@@ -149,7 +192,7 @@ public class GraphParser {
 	}
 
 	private static void parseEdges(String file,
-			List<PropertyType> propTypes,
+			PropertyList propTypes,
 			Long2ObjectMap<LongList> edges,
 			Long2ObjectMap<List<List<Object>>> eProp) throws IOException {
 
@@ -162,9 +205,9 @@ public class GraphParser {
 					continue;
 				}
 
-				String[] parts = line.split(" *");
+				String[] parts = line.split("[ \t]+");
 				long src = Long.parseLong(parts[0]);
-				long target = Long.parseLong(parts[0]);
+				long target = Long.parseLong(parts[1]);
 
 				edges.get(src).add(target);
 				eProp.get(src).add(parseProperties(propTypes, parts, 2));
@@ -172,7 +215,7 @@ public class GraphParser {
 		}
 	}
 
-	private static List<Object> parseProperties(List<PropertyType> types, String[] parts, int offset) throws IOException {
+	private static List<Object> parseProperties(PropertyList types, String[] parts, int offset) throws IOException {
 		if (types.size() != parts.length - offset) {
 			throw new IOException("error while parsing properties, "
 					+ types.size() + " properties expected but got "
@@ -183,35 +226,59 @@ public class GraphParser {
 
 		for (int i = 0; i < types.size(); i++) {
 			String str = parts[offset + i];
-			PropertyType type = types.get(i);
-
-			if (PropertyType.INTEGER.equals(type)) {
-				props.add(Integer.parseInt(str));
-			} else if (PropertyType.REAL.equals(type)) {
-				props.add(Double.parseDouble(str));
-			} else {
-				throw new IOException("Found unsupported property "
-						+ "type while parsing " + type);
-			}
+			PropertyType type = types.get(i).getType();
+			props.add(parseProperty(type, str));
 		}
 
 		return props;
 	}
 
+	private static Object parseProperty(PropertyType type, String str) throws IOException {
+		if (PropertyType.INTEGER.equals(type)) {
+			return Integer.parseInt(str);
+		} else if (PropertyType.REAL.equals(type)) {
+			return Double.parseDouble(str);
+		} else {
+			throw new IOException("Found unsupported property "
+					+ "type while parsing " + type);
+		}
+	}
+
+	/**
+	 * Create a {@link nl.tudelft.graphalytics.reference.GraphParser} by parsing
+	 * the provided {@link nl.tudelft.graphalytics.domain.Graph}
+	 *
+	 * @param graph The original graph
+	 * @return The resulting graph.
+	 * @throws IOException If an error occurs while reading the input files.
+	 */
 	public static GraphParser parseGraph(Graph graph) throws IOException {
 		LongSet vertices = new LongOpenHashSet();
 		Long2ObjectMap<List<Object>> vProp = new Long2ObjectOpenHashMap<>();
 		Long2ObjectMap<LongList> edges = new Long2ObjectOpenHashMap<>();
 		Long2ObjectMap<List<List<Object>>> eProp = new Long2ObjectOpenHashMap<>();
 
-		parseVertices(graph.getVertexFilePath(), graph.getVertexPropertyTypes(), vertices, vProp, edges, eProp);
-		parseEdges(graph.getEdgeFilePath(), graph.getEdgePropertyTypes(), edges, eProp);
+		parseVertices(
+				graph.getVertexFilePath(), graph.getVertexProperties(),
+				vertices, vProp,
+				edges, eProp);
+
+		parseEdges(
+				graph.getEdgeFilePath(), graph.getEdgeProperties(),
+				edges, eProp);
 
 		GraphParser g = new GraphParser(vertices, vProp, edges, eProp);
 		return graph.isDirected() ? g : g.toUndirected();
 	}
 
-	public static GraphParser parseGraphStructure(GraphStructure graph) throws IOException {
+	/**
+	 * Convert a {@link nl.tudelft.graphalytics.validation.GraphStructure} to
+	 * {@link nl.tudelft.graphalytics.reference.GraphParser}
+	 *
+	 * @param graph The original graph.
+	 * @return The converted graph.
+	 */
+	public static GraphParser parseGraphStructure(GraphStructure graph) {
 		LongSet vertices = new LongOpenHashSet();
 		Long2ObjectMap<List<Object>> vProp = new Long2ObjectOpenHashMap<>();
 		Long2ObjectMap<LongList> edges = new Long2ObjectOpenHashMap<>();
