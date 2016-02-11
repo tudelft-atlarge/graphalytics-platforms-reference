@@ -17,7 +17,6 @@ package nl.tudelft.graphalytics.reference.algorithms.cdlp;
 
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionLPParameters;
-import nl.tudelft.graphalytics.reference.Util;
 import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 import nl.tudelft.graphalytics.validation.GraphStructure;
 import nl.tudelft.graphalytics.validation.algorithms.cdlp.CommunityDetectionLPOutput;
@@ -44,7 +43,7 @@ public class CommunityDetectionLPJobTest extends CommunityDetectionLPValidationT
 
 	private CommunityDetectionLPOutput execute(GraphStructure graph, CommunityDetectionLPParameters parameters,
 			boolean directed) throws Exception {
-		PropertyGraph<Void, Void> pgraph = Util.convertToPropertyGraph(graph);
+		PropertyGraph<Void, Void> pgraph = graph.toPropertyGraph();
 		Long2LongMap output = new CommunityDetectionLPJob(pgraph, parameters).run();
 		return new CommunityDetectionLPOutput(output);
 	}

@@ -16,7 +16,6 @@
 package nl.tudelft.graphalytics.reference.algorithms.wcc;
 
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
-import nl.tudelft.graphalytics.reference.Util;
 import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 import nl.tudelft.graphalytics.validation.GraphStructure;
 import nl.tudelft.graphalytics.validation.algorithms.wcc.WeaklyConnectedComponentsOutput;
@@ -40,7 +39,7 @@ public class WeaklyConnectedComponentsJobTest extends WeaklyConnectedComponentsV
 	}
 
 	private WeaklyConnectedComponentsOutput execute(GraphStructure graph, boolean directed) throws Exception {
-		PropertyGraph<Void, Void> pgraph = Util.convertToPropertyGraph(graph);
+		PropertyGraph<Void, Void> pgraph = graph.toPropertyGraph();
 		Long2LongMap output = new WeaklyConnectedComponentsJob(pgraph).run();
 		return new WeaklyConnectedComponentsOutput(output);
 	}

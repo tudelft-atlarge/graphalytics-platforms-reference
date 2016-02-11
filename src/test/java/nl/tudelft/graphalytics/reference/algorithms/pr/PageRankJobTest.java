@@ -17,7 +17,6 @@ package nl.tudelft.graphalytics.reference.algorithms.pr;
 
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import nl.tudelft.graphalytics.domain.algorithms.PageRankParameters;
-import nl.tudelft.graphalytics.reference.Util;
 import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 import nl.tudelft.graphalytics.validation.GraphStructure;
 import nl.tudelft.graphalytics.validation.algorithms.pr.PageRankOutput;
@@ -44,7 +43,7 @@ public class PageRankJobTest extends PageRankValidationTest {
 
 	private PageRankOutput execute(GraphStructure graph, PageRankParameters parameters, boolean directed)
 			throws Exception {
-		PropertyGraph<Void, Void> pgraph = Util.convertToPropertyGraph(graph);
+		PropertyGraph<Void, Void> pgraph = graph.toPropertyGraph();
 		Long2DoubleMap output = new PageRankJob(pgraph, parameters).run();
 		return new PageRankOutput(output);
 	}

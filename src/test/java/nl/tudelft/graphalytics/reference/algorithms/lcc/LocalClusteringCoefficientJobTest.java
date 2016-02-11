@@ -16,7 +16,6 @@
 package nl.tudelft.graphalytics.reference.algorithms.lcc;
 
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
-import nl.tudelft.graphalytics.reference.Util;
 import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 import nl.tudelft.graphalytics.validation.GraphStructure;
 import nl.tudelft.graphalytics.validation.algorithms.lcc.LocalClusteringCoefficientOutput;
@@ -42,7 +41,7 @@ public class LocalClusteringCoefficientJobTest extends LocalClusteringCoefficien
 	}
 
 	private LocalClusteringCoefficientOutput execute(GraphStructure graph, boolean directed) throws Exception {
-		PropertyGraph<Void, Void> pgraph = Util.convertToPropertyGraph(graph);
+		PropertyGraph<Void, Void> pgraph = graph.toPropertyGraph();
 		Long2DoubleMap output = new LocalClusteringCoefficientJob(pgraph).run();
 		return new LocalClusteringCoefficientOutput(output);
 	}

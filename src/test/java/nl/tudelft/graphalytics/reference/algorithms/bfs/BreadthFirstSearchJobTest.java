@@ -17,7 +17,6 @@ package nl.tudelft.graphalytics.reference.algorithms.bfs;
 
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
-import nl.tudelft.graphalytics.reference.Util;
 import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 import nl.tudelft.graphalytics.validation.GraphStructure;
 import nl.tudelft.graphalytics.validation.algorithms.bfs.BreadthFirstSearchOutput;
@@ -44,7 +43,7 @@ public class BreadthFirstSearchJobTest extends BreadthFirstSearchValidationTest 
 
 	private BreadthFirstSearchOutput execute(GraphStructure graph,
 			BreadthFirstSearchParameters parameters, boolean directed) throws Exception {
-		PropertyGraph<Void, Void> pgraph = Util.convertToPropertyGraph(graph);
+		PropertyGraph<Void, Void> pgraph = graph.toPropertyGraph();
 		Long2LongMap output = new BreadthFirstSearchJob(pgraph, parameters).run();
 		return new BreadthFirstSearchOutput(output);
 	}
