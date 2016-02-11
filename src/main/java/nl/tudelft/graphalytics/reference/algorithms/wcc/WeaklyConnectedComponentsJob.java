@@ -15,6 +15,8 @@
  */
 package nl.tudelft.graphalytics.reference.algorithms.wcc;
 
+import java.util.Collection;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,7 +24,7 @@ import it.unimi.dsi.fastutil.longs.AbstractLongPriorityQueue;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
-import nl.tudelft.graphalytics.reference.GraphParser;
+import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 
 /**
  * Reference implementation of connected components algorithm.
@@ -32,10 +34,10 @@ import nl.tudelft.graphalytics.reference.GraphParser;
 public class WeaklyConnectedComponentsJob {
 	private static final Logger LOG = LogManager.getLogger();
 
-	private final GraphParser graph;
+	private final PropertyGraph<Void, Void> graph;
 
-	public WeaklyConnectedComponentsJob(GraphParser graph) {
-		this.graph = graph.toUndirected();
+	public WeaklyConnectedComponentsJob(PropertyGraph<Void, Void> graph) {
+		this.graph = graph;
 	}
 
 	public Long2LongMap run() {
@@ -44,31 +46,42 @@ public class WeaklyConnectedComponentsJob {
 		Long2LongMap vertex2component = new Long2LongOpenHashMap();
 		long numComponents = 0;
 
-		for (long v: graph.getVertices()) {
+		for (PropertyGraph<Void, Void>.Vertex v: graph.getVertices()) {
+			long id = v.getId();
+
 			// skip vertex if already assigned to component
-			if (vertex2component.containsKey(v)) {
+			if (vertex2component.containsKey(id)) {
 				continue;
 			}
 
 			// Assign to new component
 			long componentId = numComponents++;
-			vertex2component.put(v, componentId);
+			vertex2component.put(id, componentId);
 
 			// Perform BFS starting at v to find members of component
 			AbstractLongPriorityQueue queue = new LongArrayFIFOQueue();
-			queue.enqueue(v);
+			queue.enqueue(id);
 
 			while (!queue.isEmpty()) {
-				long u = queue.dequeueLong();
+				PropertyGraph<Void, Void>.Vertex u = graph.getVertex(queue.dequeueLong());
 
-				for (long neighbour: graph.getNeighbors(u)) {
-					if (!vertex2component.containsKey(neighbour)) {
-						vertex2component.put(neighbour, componentId);
-						queue.enqueue(neighbour);
+				for (int i = 0; i < 2; i++) {
+					Collection<PropertyGraph<Void, Void>.Edge> edges =
+							i == 0 ?
+							u.getOutgoingEdges() :
+							u.getIncomingEdges();
+
+					for (PropertyGraph<Void, Void>.Edge edge: edges) {
+						long neighbour = edge.getOtherEndpoint(u).getId();
+
+						if (!vertex2component.containsKey(neighbour)) {
+							vertex2component.put(neighbour, componentId);
+							queue.enqueue(neighbour);
+						}
 					}
+
 				}
 			}
-
 		}
 
 		LOG.debug("- Finished connected components");

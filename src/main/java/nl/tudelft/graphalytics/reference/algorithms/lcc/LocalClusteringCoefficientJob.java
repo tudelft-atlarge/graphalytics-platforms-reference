@@ -15,16 +15,15 @@
  */
 package nl.tudelft.graphalytics.reference.algorithms.lcc;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
-import nl.tudelft.graphalytics.reference.GraphParser;
+import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 
 /**
  * Reference implementation of local clustering coefficient calculation.
@@ -34,42 +33,32 @@ import nl.tudelft.graphalytics.reference.GraphParser;
 public class LocalClusteringCoefficientJob {
 	private static final Logger LOG = LogManager.getLogger();
 
-	private final GraphParser graph;
+	private final PropertyGraph<Void, Void> graph;
 
-	public LocalClusteringCoefficientJob(GraphParser graph) {
+	public LocalClusteringCoefficientJob(PropertyGraph<Void, Void> graph) {
 		this.graph = graph;
 	}
 
 	public Long2DoubleMap run() {
 		LOG.debug("- Starting local clustering coefficient calculation");
 
-		Long2ObjectMap<LongSet> outNeighbors = new Long2ObjectOpenHashMap<>();
-		Long2ObjectMap<LongSet> neighbors = new Long2ObjectOpenHashMap<>();
-
-		for (long v: graph.getVertices()) {
-			outNeighbors.put(v, new LongOpenHashSet());
-			neighbors.put(v, new LongOpenHashSet());
-		}
-
-		for (long v: graph.getVertices()) {
-			for (long u: graph.getNeighbors(v)) {
-				outNeighbors.get(v).add(u);
-				neighbors.get(u).add(v);
-				neighbors.get(v).add(u);
-			}
-		}
-
 		Long2DoubleMap lcc = new Long2DoubleOpenHashMap();
 
-		for (long v: graph.getVertices()) {
+		for (PropertyGraph<Void, Void>.Vertex v: graph.getVertices()) {
 			int tri = 0;
-			LongSet v_neighbours = neighbors.get(v);
+			Set<PropertyGraph<Void, Void>.Vertex> v_neighbours = new HashSet<>();
 
-			for (long u: v_neighbours) {
-				LongSet u_neighbours = outNeighbors.get(u);
+			for (PropertyGraph<Void, Void>.Edge e: v.getIncomingEdges()) {
+				v_neighbours.add(e.getSourceVertex());
+			}
 
-				for (long neighbour: v_neighbours) {
-					if (u_neighbours.contains(neighbour)) {
+			for (PropertyGraph<Void, Void>.Edge e: v.getOutgoingEdges()) {
+				v_neighbours.add(e.getDestinationVertex());
+			}
+
+			for (PropertyGraph<Void, Void>.Vertex u: v_neighbours) {
+				for (PropertyGraph<Void, Void>.Edge e: u.getOutgoingEdges()) {
+					if (v_neighbours.contains(e.getDestinationVertex())) {
 						tri++;
 					}
 				}
@@ -78,7 +67,7 @@ public class LocalClusteringCoefficientJob {
 			int degree = v_neighbours.size();
 
 			double result = degree >= 2 ? tri / (degree * (degree - 1.0)) : 0.0;
-			lcc.put(v, result);
+			lcc.put(v.getId(), result);
 		}
 
 		LOG.debug("- Finished local clustering coefficient calculation");

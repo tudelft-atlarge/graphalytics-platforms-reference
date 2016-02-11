@@ -23,7 +23,7 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionLPParameters;
-import nl.tudelft.graphalytics.reference.GraphParser;
+import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 
 /**
  * Reference implementation of community detection algorithm.
@@ -33,11 +33,11 @@ import nl.tudelft.graphalytics.reference.GraphParser;
 public class CommunityDetectionLPJob {
 	private static final Logger LOG = LogManager.getLogger();
 
-	private final GraphParser graph;
+	private final PropertyGraph<Void, Void> graph;
 	private final CommunityDetectionLPParameters parameters;
 
-	public CommunityDetectionLPJob(GraphParser graph, CommunityDetectionLPParameters parameters) {
-		this.graph = graph.toUndirected();
+	public CommunityDetectionLPJob(PropertyGraph<Void, Void> graph, CommunityDetectionLPParameters parameters) {
+		this.graph = graph;
 		this.parameters = parameters;
 	}
 
@@ -45,7 +45,7 @@ public class CommunityDetectionLPJob {
 		LOG.debug("- Starting community detection algorithm");
 
 		// Read parameters
-		int numVertices = graph.getNumberOfVertices();
+		int numVertices = graph.getVertices().size();
 		int numIterations = parameters.getMaxIterations();
 
 		// Initialize values
@@ -55,8 +55,8 @@ public class CommunityDetectionLPJob {
 		histogram.defaultReturnValue(0);
 
 		// Set initial labels
-		for (long v: graph.getVertices()) {
-			labels.put(v, v);
+		for (PropertyGraph<Void, Void>.Vertex v: graph.getVertices()) {
+			labels.put(v.getId(), v.getId());
 		}
 
 		// Run iterations
@@ -65,11 +65,18 @@ public class CommunityDetectionLPJob {
 
 			boolean change = false;
 
-			for (long v: graph.getVertices()) {
+			for (PropertyGraph<Void, Void>.Vertex v: graph.getVertices()) {
 				histogram.clear();
 
 				// Count frequency of each label
-				for (long neighbor: graph.getNeighbors(v)) {
+				for (PropertyGraph<Void, Void>.Edge edge: v.getOutgoingEdges()) {
+					long neighbor = edge.getDestinationVertex().getId();
+					long label = labels.get(neighbor);
+					histogram.put(label, histogram.get(label) + 1);
+				}
+
+				for (PropertyGraph<Void, Void>.Edge edge: v.getIncomingEdges()) {
+					long neighbor = edge.getSourceVertex().getId();
 					long label = labels.get(neighbor);
 					histogram.put(label, histogram.get(label) + 1);
 				}
@@ -89,8 +96,8 @@ public class CommunityDetectionLPJob {
 				}
 
 				// Set new label and check if label of vertex has changed
-				newLabels.put(v, bestLabel);
-				change = change || labels.get(v) != bestLabel;
+				newLabels.put(v.getId(), bestLabel);
+				change = change || labels.get(v.getId()) != bestLabel;
 			}
 
 			Long2LongMap tmp = labels;

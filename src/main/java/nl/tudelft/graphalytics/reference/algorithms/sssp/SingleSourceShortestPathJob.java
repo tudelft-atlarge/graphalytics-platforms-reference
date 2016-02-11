@@ -21,10 +21,9 @@ import org.apache.logging.log4j.Logger;
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import nl.tudelft.graphalytics.domain.algorithms.SingleSourceShortestPathsParameters;
-import nl.tudelft.graphalytics.reference.GraphParser;
+import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 
 /**
  * Reference implementation of the Single Source Shortest Path algorithm.
@@ -37,10 +36,10 @@ public class SingleSourceShortestPathJob {
 
 	private static final double MAX_DISTANCE = Double.POSITIVE_INFINITY;
 
-	private final GraphParser graph;
+	private final PropertyGraph<Void, Double> graph;
 	private final SingleSourceShortestPathsParameters parameters;
 
-	public SingleSourceShortestPathJob(GraphParser graph, SingleSourceShortestPathsParameters parameters) {
+	public SingleSourceShortestPathJob(PropertyGraph<Void, Double> graph, SingleSourceShortestPathsParameters parameters) {
 		this.graph = graph;
 		this.parameters = parameters;
 	}
@@ -55,8 +54,8 @@ public class SingleSourceShortestPathJob {
 		LongSet pending = new LongLinkedOpenHashSet();
 
 		// Initialize distances
-		for (long v: graph.getVertices()) {
-			distances.put(v, MAX_DISTANCE);
+		for (PropertyGraph<Void, Double>.Vertex v: graph.getVertices()) {
+			distances.put(v.getId(), MAX_DISTANCE);
 		}
 
 		// Insert source vertex
@@ -81,15 +80,13 @@ public class SingleSourceShortestPathJob {
 			visited.add(minVertex);
 
 			// Inform the neighbors of this vertex
-			LongList neighbors = graph.getNeighbors(minVertex);
-
-			for (int i = 0; i < neighbors.size(); i++) {
-				long neighbor = neighbors.getLong(i);
-				double edgeDist = (Double) graph.getEdgeProperties(minVertex, i).get(0);
+			for (PropertyGraph<Void, Double>.Edge edge: graph.getVertex(minVertex).getOutgoingEdges()) {
+				long neighbor = edge.getDestinationVertex().getId();
+				double edgeDist = edge.getValue();
 				double newDist = minDist + edgeDist;
 
 				// If neighbor not in pending set or distance has improved
-				if (!pending.contains(neighbor) || distances.get(neighbor) > newDist) {
+				if (newDist < distances.get(neighbor)) {
 					pending.add(neighbor);
 					distances.put(neighbor, newDist);
 				}

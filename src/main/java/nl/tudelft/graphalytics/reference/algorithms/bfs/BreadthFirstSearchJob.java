@@ -25,7 +25,7 @@ import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
-import nl.tudelft.graphalytics.reference.GraphParser;
+import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 
 /**
  * Reference implementation of the Breadth First Search algorithm.
@@ -38,10 +38,10 @@ public class BreadthFirstSearchJob {
 
 	private static final long MAX_DISTANCE = Long.MAX_VALUE;
 
-	private final GraphParser graph;
+	private final PropertyGraph<Void, Void> graph;
 	private final BreadthFirstSearchParameters parameters;
 
-	public BreadthFirstSearchJob(GraphParser graph, BreadthFirstSearchParameters parameters) {
+	public BreadthFirstSearchJob(PropertyGraph<Void, Void> graph, BreadthFirstSearchParameters parameters) {
 		this.graph = graph;
 		this.parameters = parameters;
 	}
@@ -50,9 +50,9 @@ public class BreadthFirstSearchJob {
 		LOG.debug("- Starting Breadth First Search algorithm");
 
 		// Initialize distances
-		Long2LongMap distances = new Long2LongOpenHashMap(graph.getNumberOfVertices());
-		for (long v: graph.getVertices()) {
-			distances.put(v, MAX_DISTANCE);
+		Long2LongMap distances = new Long2LongOpenHashMap();
+		for (PropertyGraph<Void, Void>.Vertex v: graph.getVertices()) {
+			distances.put(v.getId(), MAX_DISTANCE);
 		}
 		distances.put(parameters.getSourceVertex(), 0L);
 
@@ -70,7 +70,8 @@ public class BreadthFirstSearchJob {
 			long currentVertexDistance = distances.get(currentVertexId);
 
 			// Iterate over all outgoing edges of this vertex
-			for (long neighbour: graph.getNeighbors(currentVertexId)) {
+			for (PropertyGraph<Void, Void>.Edge e: graph.getVertex(currentVertexId).getOutgoingEdges()) {
+				long neighbour = e.getDestinationVertex().getId();
 
 				// If a neighbour has not been visited, add it to the queue and set its distance from the root
 				if (!visited.contains(neighbour)) {
