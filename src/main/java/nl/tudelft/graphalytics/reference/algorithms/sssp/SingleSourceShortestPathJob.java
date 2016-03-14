@@ -25,6 +25,11 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import nl.tudelft.graphalytics.domain.algorithms.SingleSourceShortestPathsParameters;
 import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 
+import java.util.Comparator;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
+
 /**
  * Reference implementation of the Single Source Shortest Path algorithm.
  *
@@ -49,46 +54,38 @@ public class SingleSourceShortestPathJob {
 		LOG.debug("- Starting Single Source Shortest Path algorithm");
 
 		// Define data structures
-		Long2DoubleMap distances = new Long2DoubleOpenHashMap();
-		LongSet visited = new LongLinkedOpenHashSet();
-		LongSet pending = new LongLinkedOpenHashSet();
+		Long2DoubleMap distances = new Long2DoubleOpenHashMap(); // for O(1) lookup for neighbors' distance
+		PriorityQueue<Vertex> queue = new PriorityQueue<>(graph.getVertices().size(), new Vertex()); // for O(log n) lookup for priority
+		LongSet visited = new LongLinkedOpenHashSet(); // for tracking duplicated queue items.
 
 		// Initialize distances
-		for (PropertyGraph<Void, Double>.Vertex v: graph.getVertices()) {
+		for (PropertyGraph<Void, Double>.Vertex v : graph.getVertices()) {
 			distances.put(v.getId(), MAX_DISTANCE);
 		}
 
 		// Insert source vertex
 		distances.put(parameters.getSourceVertex(), 0.0);
-		pending.add(parameters.getSourceVertex());
+		queue.add(new Vertex(parameters.getSourceVertex(), 0.0));
 
 		// Iterate until pending set is empty
-		while (!pending.isEmpty()) {
-			long minVertex = -1;
-			double minDist = MAX_DISTANCE;
+		while (!queue.isEmpty()) {
+			Vertex minVertex = queue.remove();
 
-			// Find vertex in pending set for which distance is minimal
-			for (long v: pending) {
-				if (distances.get(v) < minDist) {
-					minVertex = v;
-					minDist = distances.get(v);
-				}
-			}
-
-			// move vertex from pending set to visited set
-			pending.remove(minVertex);
-			visited.add(minVertex);
 
 			// Inform the neighbors of this vertex
-			for (PropertyGraph<Void, Double>.Edge edge: graph.getVertex(minVertex).getOutgoingEdges()) {
-				long neighbor = edge.getDestinationVertex().getId();
-				double edgeDist = edge.getValue();
-				double newDist = minDist + edgeDist;
+			if (!visited.contains(minVertex.getId())) {
+				visited.add(minVertex.getId());
 
-				// If neighbor not in pending set or distance has improved
-				if (newDist < distances.get(neighbor)) {
-					pending.add(neighbor);
-					distances.put(neighbor, newDist);
+				for (PropertyGraph<Void, Double>.Edge edge : graph.getVertex(minVertex.getId()).getOutgoingEdges()) {
+					long neighbor = edge.getDestinationVertex().getId();
+					double edgeDist = edge.getValue();
+					double newDist = minVertex.getDist() + edgeDist;
+
+					// If neighbor not in pending set or distance has improved
+					if (newDist < distances.get(neighbor)) {
+						queue.add(new Vertex(neighbor, newDist));
+						distances.put(neighbor, newDist);
+					}
 				}
 			}
 		}
@@ -96,5 +93,36 @@ public class SingleSourceShortestPathJob {
 		LOG.debug("- Finished Single Source Shortest Path algorithm");
 
 		return distances;
+	}
+
+	private class Vertex implements Comparator<Vertex> {
+		private long id;
+		private double dist;
+
+		public Vertex() {
+		}
+
+		public Vertex(long id, double dist) {
+			this.id = id;
+			this.dist = dist;
+		}
+
+		@Override
+		public int compare(Vertex v1, Vertex v2) {
+			if (v1.dist < v2.dist)
+				return -1;
+			if (v1.dist > v2.dist)
+				return 1;
+			return 0;
+		}
+
+		public long getId() {
+			return id;
+		}
+
+		public double getDist() {
+			return dist;
+		}
+
 	}
 }
