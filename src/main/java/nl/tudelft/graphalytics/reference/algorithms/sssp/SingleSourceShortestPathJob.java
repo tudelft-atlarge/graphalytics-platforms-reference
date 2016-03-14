@@ -50,17 +50,17 @@ public class SingleSourceShortestPathJob {
 
 		// Define data structures
 		Long2DoubleMap distances = new Long2DoubleOpenHashMap();
-		LongSet visited = new LongLinkedOpenHashSet();
-		LongSet pending = new LongLinkedOpenHashSet();
+		LongSet pending = new LongLinkedOpenHashSet(); // This could be a priority queue.
 
-		// Initialize distances
+		// Initialize distances, put all vertices in pending queue
 		for (PropertyGraph<Void, Double>.Vertex v: graph.getVertices()) {
 			distances.put(v.getId(), MAX_DISTANCE);
+			pending.add(v.getId());
 		}
 
-		// Insert source vertex
+		// set distance of source vertex to 0
 		distances.put(parameters.getSourceVertex(), 0.0);
-		pending.add(parameters.getSourceVertex());
+
 
 		// Iterate until pending set is empty
 		while (!pending.isEmpty()) {
@@ -75,9 +75,8 @@ public class SingleSourceShortestPathJob {
 				}
 			}
 
-			// move vertex from pending set to visited set
+			// remove this vertex, as the minimum path has been found already.
 			pending.remove(minVertex);
-			visited.add(minVertex);
 
 			// Inform the neighbors of this vertex
 			for (PropertyGraph<Void, Double>.Edge edge: graph.getVertex(minVertex).getOutgoingEdges()) {
@@ -87,7 +86,6 @@ public class SingleSourceShortestPathJob {
 
 				// If neighbor not in pending set or distance has improved
 				if (newDist < distances.get(neighbor)) {
-					pending.add(neighbor);
 					distances.put(neighbor, newDist);
 				}
 			}
