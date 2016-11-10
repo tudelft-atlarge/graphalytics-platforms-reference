@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 
+import nl.tudelft.graphalytics.BenchmarkMetric;
 import nl.tudelft.graphalytics.Platform;
 import nl.tudelft.graphalytics.PlatformExecutionException;
 import nl.tudelft.graphalytics.domain.Algorithm;
@@ -80,12 +81,32 @@ public class ReferencePlatform implements Platform {
 				edgeParser);
 	}
 
+	private PropertyGraph convertToPropertyGraph(Graph graph) throws Exception {
+		ValueParser vertexParser = getValueParser(graph.getVertexProperties());
+		ValueParser edgeParser = getValueParser(graph.getEdgeProperties());
+
+		return PropertyGraphParser.parsePropertyGraph(
+				graph.getVertexFilePath(),
+				graph.getEdgeFilePath(),
+				graph.isDirected(),
+				vertexParser,
+				edgeParser);
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public PlatformBenchmarkResult executeAlgorithmOnGraph(Benchmark benchmark) throws PlatformExecutionException {
 		Algorithm algorithm = benchmark.getAlgorithm();
 		Object parameters = benchmark.getAlgorithmParameters();
 		Map<Long, ? extends Object> output;
+
+
+		PropertyGraph graph = null;
+		try {
+			graph = convertToPropertyGraph(benchmark.getGraph());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		switch (algorithm) {
 			case BFS:
@@ -118,12 +139,17 @@ public class ReferencePlatform implements Platform {
 			}
 		}
 
-		return new PlatformBenchmarkResult(getPlatformConfiguration());
+		return new PlatformBenchmarkResult(getPlatformConfiguration(), true);
 	}
 
 	@Override
 	public void deleteGraph(String graphName) {
 		graph = null;
+	}
+
+	@Override
+	public BenchmarkMetric extractMetric() {
+		return null; //TODO implement this;
 	}
 
 	private ValueParser getValueParser(PropertyList props) {
