@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 
-import nl.tudelft.graphalytics.BenchmarkMetric;
+import nl.tudelft.graphalytics.BenchmarkMetrics;
 import nl.tudelft.graphalytics.Platform;
 import nl.tudelft.graphalytics.PlatformExecutionException;
 import nl.tudelft.graphalytics.domain.Algorithm;
@@ -148,7 +148,7 @@ public class ReferencePlatform implements Platform {
 	}
 
 	@Override
-	public BenchmarkMetric extractMetric() {
+	public BenchmarkMetrics retrieveMetrics() {
 		return null; //TODO implement this;
 	}
 
