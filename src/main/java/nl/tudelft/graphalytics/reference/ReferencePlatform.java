@@ -20,18 +20,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 
-import nl.tudelft.graphalytics.BenchmarkMetrics;
-import nl.tudelft.graphalytics.Platform;
-import nl.tudelft.graphalytics.PlatformExecutionException;
-import nl.tudelft.graphalytics.domain.Algorithm;
-import nl.tudelft.graphalytics.domain.Benchmark;
-import nl.tudelft.graphalytics.domain.Graph;
-import nl.tudelft.graphalytics.domain.NestedConfiguration;
-import nl.tudelft.graphalytics.domain.PlatformBenchmarkResult;
-import nl.tudelft.graphalytics.domain.algorithms.BreadthFirstSearchParameters;
-import nl.tudelft.graphalytics.domain.algorithms.CommunityDetectionLPParameters;
-import nl.tudelft.graphalytics.domain.algorithms.PageRankParameters;
-import nl.tudelft.graphalytics.domain.algorithms.SingleSourceShortestPathsParameters;
+import nl.tudelft.graphalytics.report.result.BenchmarkMetrics;
+import nl.tudelft.graphalytics.execution.Platform;
+import nl.tudelft.graphalytics.execution.PlatformExecutionException;
+import nl.tudelft.graphalytics.domain.benchmark.BenchmarkRun;
+import nl.tudelft.graphalytics.domain.algorithms.*;
+import nl.tudelft.graphalytics.domain.graph.Graph;
 import nl.tudelft.graphalytics.domain.graph.PropertyList;
 import nl.tudelft.graphalytics.domain.graph.PropertyType;
 import nl.tudelft.graphalytics.reference.algorithms.bfs.BreadthFirstSearchJob;
@@ -40,9 +34,12 @@ import nl.tudelft.graphalytics.reference.algorithms.lcc.LocalClusteringCoefficie
 import nl.tudelft.graphalytics.reference.algorithms.pr.PageRankJob;
 import nl.tudelft.graphalytics.reference.algorithms.sssp.SingleSourceShortestPathJob;
 import nl.tudelft.graphalytics.reference.algorithms.wcc.WeaklyConnectedComponentsJob;
+import nl.tudelft.graphalytics.report.result.PlatformBenchmarkResult;
 import nl.tudelft.graphalytics.util.graph.PropertyGraph;
 import nl.tudelft.graphalytics.util.graph.PropertyGraphParser;
 import nl.tudelft.graphalytics.util.graph.PropertyGraphParser.ValueParser;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Reference implementation of the Graphalytics benchmark.
@@ -50,6 +47,8 @@ import nl.tudelft.graphalytics.util.graph.PropertyGraphParser.ValueParser;
  * @author Tim Hegeman
  */
 public class ReferencePlatform implements Platform {
+
+	private static final Logger LOG = LogManager.getLogger();
 
 	private PropertyGraph graph;
 
@@ -68,8 +67,29 @@ public class ReferencePlatform implements Platform {
 	}
 
 	@Override
+	public void postprocess(BenchmarkRun benchmarkRun) {
+
+	}
+
+	@Override
+	public void prepare(BenchmarkRun benchmarkRun) {
+
+	}
+
+	@Override
+	public void preprocess(BenchmarkRun benchmarkRun) {
+
+	}
+
+	@Override
+	public void cleanup(BenchmarkRun benchmarkRun) {
+
+	}
+
+	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void uploadGraph(Graph graph) throws Exception {
+		LOG.info("Loading graph: " + graph.getName() + ".");
 		ValueParser vertexParser = getValueParser(graph.getVertexProperties());
 		ValueParser edgeParser = getValueParser(graph.getEdgeProperties());
 
@@ -79,6 +99,8 @@ public class ReferencePlatform implements Platform {
 				graph.isDirected(),
 				vertexParser,
 				edgeParser);
+
+		LOG.info("Loaded graph: " + graph.getName() + ".");
 	}
 
 	private PropertyGraph convertToPropertyGraph(Graph graph) throws Exception {
@@ -95,15 +117,15 @@ public class ReferencePlatform implements Platform {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public PlatformBenchmarkResult executeAlgorithmOnGraph(Benchmark benchmark) throws PlatformExecutionException {
-		Algorithm algorithm = benchmark.getAlgorithm();
-		Object parameters = benchmark.getAlgorithmParameters();
+	public PlatformBenchmarkResult execute(BenchmarkRun benchmarkRun) throws PlatformExecutionException {
+		Algorithm algorithm = benchmarkRun.getAlgorithm();
+		Object parameters = benchmarkRun.getAlgorithmParameters();
 		Map<Long, ? extends Object> output;
 
 
 		PropertyGraph graph = null;
 		try {
-			graph = convertToPropertyGraph(benchmark.getGraph());
+			graph = convertToPropertyGraph(benchmarkRun.getGraph());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -131,15 +153,16 @@ public class ReferencePlatform implements Platform {
 				throw new PlatformExecutionException("Unsupported algorithm: " + algorithm);
 		}
 
-		if (benchmark.isOutputRequired()) {
+		if (benchmarkRun.isOutputRequired()) {
 			try {
-				writeOutput(benchmark.getOutputPath(), output);
+				String outputFile = benchmarkRun.getOutputDir().resolve(benchmarkRun.getName()).toAbsolutePath().toString();
+				writeOutput(outputFile, output);
 			} catch(IOException e) {
 				throw new PlatformExecutionException("An error while writing to output file", e);
 			}
 		}
 
-		return new PlatformBenchmarkResult(getPlatformConfiguration(), true);
+		return new PlatformBenchmarkResult(true);
 	}
 
 	@Override
@@ -148,7 +171,7 @@ public class ReferencePlatform implements Platform {
 	}
 
 	@Override
-	public BenchmarkMetrics retrieveMetrics() {
+	public BenchmarkMetrics extractMetrics() {
 		return null; //TODO implement this;
 	}
 
@@ -174,13 +197,8 @@ public class ReferencePlatform implements Platform {
 	}
 
 	@Override
-	public String getName() {
+	public String getPlatformName() {
 		return "reference";
-	}
-
-	@Override
-	public NestedConfiguration getPlatformConfiguration() {
-		return NestedConfiguration.empty();
 	}
 
 }
