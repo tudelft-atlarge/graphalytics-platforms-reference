@@ -21,11 +21,11 @@ import java.io.PrintWriter;
 import java.util.Map;
 
 import science.atlarge.graphalytics.domain.algorithms.*;
+import science.atlarge.graphalytics.domain.graph.FormattedGraph;
 import science.atlarge.graphalytics.report.result.BenchmarkMetrics;
 import science.atlarge.graphalytics.execution.Platform;
 import science.atlarge.graphalytics.execution.PlatformExecutionException;
 import science.atlarge.graphalytics.domain.benchmark.BenchmarkRun;
-import science.atlarge.graphalytics.domain.graph.Graph;
 import science.atlarge.graphalytics.domain.graph.PropertyList;
 import science.atlarge.graphalytics.domain.graph.PropertyType;
 import science.atlarge.graphalytics.reference.algorithms.bfs.BreadthFirstSearchJob;
@@ -88,36 +88,36 @@ public class ReferencePlatform implements Platform {
 
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void uploadGraph(Graph graph) throws Exception {
-		LOG.info("Loading graph: " + graph.getName() + ".");
-		ValueParser vertexParser = getValueParser(graph.getVertexProperties());
-		ValueParser edgeParser = getValueParser(graph.getEdgeProperties());
+	public void uploadGraph(FormattedGraph formattedGraph) throws Exception {
+		LOG.info("Loading graph: " + formattedGraph.getName() + ".");
+		ValueParser vertexParser = getValueParser(formattedGraph.getVertexProperties());
+		ValueParser edgeParser = getValueParser(formattedGraph.getEdgeProperties());
 
 		this.graph = PropertyGraphParser.parsePropertyGraph(
-				graph.getVertexFilePath(),
-				graph.getEdgeFilePath(),
-				graph.isDirected(),
+				formattedGraph.getVertexFilePath(),
+				formattedGraph.getEdgeFilePath(),
+				formattedGraph.isDirected(),
 				vertexParser,
 				edgeParser);
 
-		LOG.info("Loaded graph: " + graph.getName() + ".");
+		LOG.info("Loaded graph: " + formattedGraph.getName() + ".");
 	}
 
-	private PropertyGraph convertToPropertyGraph(Graph graph) throws Exception {
-		ValueParser vertexParser = getValueParser(graph.getVertexProperties());
-		ValueParser edgeParser = getValueParser(graph.getEdgeProperties());
+	private PropertyGraph convertToPropertyGraph(FormattedGraph formattedGraph) throws Exception {
+		ValueParser vertexParser = getValueParser(formattedGraph.getVertexProperties());
+		ValueParser edgeParser = getValueParser(formattedGraph.getEdgeProperties());
 
 		return PropertyGraphParser.parsePropertyGraph(
-				graph.getVertexFilePath(),
-				graph.getEdgeFilePath(),
-				graph.isDirected(),
+				formattedGraph.getVertexFilePath(),
+				formattedGraph.getEdgeFilePath(),
+				formattedGraph.isDirected(),
 				vertexParser,
 				edgeParser);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public PlatformBenchmarkResult execute(BenchmarkRun benchmarkRun) throws PlatformExecutionException {
+	public boolean execute(BenchmarkRun benchmarkRun) throws PlatformExecutionException {
 		Algorithm algorithm = benchmarkRun.getAlgorithm();
 		Object parameters = benchmarkRun.getAlgorithmParameters();
 		Map<Long, ? extends Object> output;
@@ -125,7 +125,7 @@ public class ReferencePlatform implements Platform {
 
 		PropertyGraph graph = null;
 		try {
-			graph = convertToPropertyGraph(benchmarkRun.getGraph());
+			graph = convertToPropertyGraph(benchmarkRun.getFormattedGraph());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -162,17 +162,12 @@ public class ReferencePlatform implements Platform {
 			}
 		}
 
-		return new PlatformBenchmarkResult(true);
+		return true;
 	}
 
 	@Override
-	public void deleteGraph(String graphName) {
+	public void deleteGraph(FormattedGraph formattedGraph) {
 		graph = null;
-	}
-
-	@Override
-	public BenchmarkMetrics extractMetrics() {
-		return null; //TODO implement this;
 	}
 
 	private ValueParser getValueParser(PropertyList props) {
