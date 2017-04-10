@@ -67,8 +67,8 @@ public class ReferencePlatform implements Platform {
 	}
 
 	@Override
-	public void postprocess(BenchmarkRun benchmarkRun) {
-
+	public BenchmarkMetrics postprocess(BenchmarkRun benchmarkRun) {
+		return new BenchmarkMetrics();
 	}
 
 	@Override
