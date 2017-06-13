@@ -15,5 +15,15 @@
 # limitations under the License.
 #
 
+
+# Ensure the configuration file exists
+if [ ! -f "$config/platform.properties" ]; then
+	echo "Missing mandatory configuration file: $config/platform.properties" >&2
+	exit 1
+fi
+
+# Set the "platform" variable
 export platform="reference"
 
+# Set Library jar
+export LIBRARY_JAR=`ls lib/graphalytics-*default*.jar`
