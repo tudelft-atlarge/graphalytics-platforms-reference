@@ -67,7 +67,12 @@ public class ReferencePlatform implements Platform {
 	}
 
 	@Override
-	public BenchmarkMetrics postprocess(BenchmarkRun benchmarkRun) {
+	public void verifySetup() {
+
+	}
+
+	@Override
+	public BenchmarkMetrics finalize(BenchmarkRun benchmarkRun) {
 		return new BenchmarkMetrics();
 	}
 
@@ -77,18 +82,18 @@ public class ReferencePlatform implements Platform {
 	}
 
 	@Override
-	public void preprocess(BenchmarkRun benchmarkRun) {
+	public void startup(BenchmarkRun benchmarkRun) {
 
 	}
 
 	@Override
-	public void cleanup(BenchmarkRun benchmarkRun) {
+	public void terminate(BenchmarkRun benchmarkRun) {
 
 	}
 
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void uploadGraph(FormattedGraph formattedGraph) throws Exception {
+	public void loadGraph(FormattedGraph formattedGraph) throws Exception {
 		LOG.info("Loading graph: " + formattedGraph.getName() + ".");
 		ValueParser vertexParser = getValueParser(formattedGraph.getVertexProperties());
 		ValueParser edgeParser = getValueParser(formattedGraph.getEdgeProperties());
@@ -117,7 +122,7 @@ public class ReferencePlatform implements Platform {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean execute(BenchmarkRun benchmarkRun) throws PlatformExecutionException {
+	public boolean run(BenchmarkRun benchmarkRun) throws PlatformExecutionException {
 		Algorithm algorithm = benchmarkRun.getAlgorithm();
 		Object parameters = benchmarkRun.getAlgorithmParameters();
 		Map<Long, ? extends Object> output;
