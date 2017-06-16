@@ -16,12 +16,14 @@
 package science.atlarge.graphalytics.reference;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.Map;
 
 import org.apache.commons.io.output.TeeOutputStream;
 import science.atlarge.graphalytics.domain.algorithms.*;
 import science.atlarge.graphalytics.domain.graph.FormattedGraph;
+import science.atlarge.graphalytics.report.result.BenchmarkMetric;
 import science.atlarge.graphalytics.report.result.BenchmarkMetrics;
 import science.atlarge.graphalytics.execution.Platform;
 import science.atlarge.graphalytics.execution.PlatformExecutionException;
@@ -39,6 +41,8 @@ import science.atlarge.graphalytics.util.graph.PropertyGraphParser;
 import science.atlarge.graphalytics.util.graph.PropertyGraphParser.ValueParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import static java.nio.file.Files.readAllBytes;
 
 /**
  * Reference implementation of the Graphalytics benchmark.
@@ -76,7 +80,47 @@ public class ReferencePlatform implements Platform {
 	@Override
 	public BenchmarkMetrics finalize(BenchmarkRun benchmarkRun) {
 		stopPlatformLogging();
-		return new BenchmarkMetrics();
+
+		Path path = benchmarkRun.getLogDir().resolve("platform").resolve("driver.logs");
+		String logs = null;
+		try {
+			logs = new String(readAllBytes(path));
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new IllegalStateException("Can't read file at " + path);
+		}
+
+		Long startTime = null;
+		Long endTime = null;
+
+		for (String line : logs.split("\n")) {
+			try {
+				if (line.contains("Processing starts at: ")) {
+					String[] lineParts = line.split("\\s+");
+					startTime = Long.parseLong(lineParts[lineParts.length - 1]);
+				}
+
+				if (line.contains("Processing ends at: ")) {
+					String[] lineParts = line.split("\\s+");
+					endTime = Long.parseLong(lineParts[lineParts.length - 1]);
+				}
+			} catch (Exception e) {
+				LOG.error(String.format("Cannot parse line: %s", line, e));
+			}
+
+		}
+
+		if(startTime != null && endTime != null) {
+
+			BenchmarkMetrics metrics = new BenchmarkMetrics();
+			Long procTimeMS =  new Long(endTime - startTime);
+			BigDecimal procTimeS = (new BigDecimal(procTimeMS)).divide(new BigDecimal(1000), 3, BigDecimal.ROUND_CEILING);
+			metrics.setProcessingTime(new BenchmarkMetric(procTimeS, "s"));
+
+			return metrics;
+		} else {
+			return new BenchmarkMetrics();
+		}
 	}
 
 	@Override
@@ -130,7 +174,6 @@ public class ReferencePlatform implements Platform {
 		Object parameters = benchmarkRun.getAlgorithmParameters();
 		Map<Long, ? extends Object> output;
 
-
 		PropertyGraph graph = null;
 		try {
 			graph = convertToPropertyGraph(benchmarkRun.getFormattedGraph());
@@ -138,6 +181,7 @@ public class ReferencePlatform implements Platform {
 			e.printStackTrace();
 		}
 
+		LOG.info("Processing starts at: " + System.currentTimeMillis());
 		switch (algorithm) {
 			case BFS:
 				output = new BreadthFirstSearchJob((PropertyGraph<Void, Void>) graph, (BreadthFirstSearchParameters)parameters).run();
@@ -169,6 +213,7 @@ public class ReferencePlatform implements Platform {
 				throw new PlatformExecutionException("An error while writing to output file", e);
 			}
 		}
+		LOG.info("Processing ends at: " + System.currentTimeMillis());
 		return true;
 	}
 
@@ -203,7 +248,6 @@ public class ReferencePlatform implements Platform {
 			e.printStackTrace();
 			throw new IllegalArgumentException("cannot redirect to output file");
 		}
-		System.out.println("StartTime: " + System.currentTimeMillis());
 	}
 
 	public static void stopPlatformLogging() {
