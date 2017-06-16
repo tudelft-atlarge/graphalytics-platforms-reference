@@ -52,89 +52,14 @@ import static java.nio.file.Files.readAllBytes;
 public class ReferencePlatform implements Platform {
 
 	private static final Logger LOG = LogManager.getLogger();
-
 	private static PrintStream sysOut;
 	private static PrintStream sysErr;
 
 	private PropertyGraph graph;
 
-	private class VoidParser implements ValueParser<Void> {
-		@Override
-		public Void parse(String[] tokens) throws IOException {
-			return null;
-		}
-	}
-
-	private class DoubleParser implements ValueParser<Double> {
-		@Override
-		public Double parse(String[] tokens) throws IOException {
-			return Double.parseDouble(tokens[0]);
-		}
-	}
 
 	@Override
 	public void verifySetup() {
-
-	}
-
-	@Override
-	public BenchmarkMetrics finalize(BenchmarkRun benchmarkRun) {
-		stopPlatformLogging();
-
-		Path path = benchmarkRun.getLogDir().resolve("platform").resolve("driver.logs");
-		String logs = null;
-		try {
-			logs = new String(readAllBytes(path));
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new IllegalStateException("Can't read file at " + path);
-		}
-
-		Long startTime = null;
-		Long endTime = null;
-
-		for (String line : logs.split("\n")) {
-			try {
-				if (line.contains("Processing starts at: ")) {
-					String[] lineParts = line.split("\\s+");
-					startTime = Long.parseLong(lineParts[lineParts.length - 1]);
-				}
-
-				if (line.contains("Processing ends at: ")) {
-					String[] lineParts = line.split("\\s+");
-					endTime = Long.parseLong(lineParts[lineParts.length - 1]);
-				}
-			} catch (Exception e) {
-				LOG.error(String.format("Cannot parse line: %s", line, e));
-			}
-
-		}
-
-		if(startTime != null && endTime != null) {
-
-			BenchmarkMetrics metrics = new BenchmarkMetrics();
-			Long procTimeMS =  new Long(endTime - startTime);
-			BigDecimal procTimeS = (new BigDecimal(procTimeMS)).divide(new BigDecimal(1000), 3, BigDecimal.ROUND_CEILING);
-			metrics.setProcessingTime(new BenchmarkMetric(procTimeS, "s"));
-
-			return metrics;
-		} else {
-			return new BenchmarkMetrics();
-		}
-	}
-
-	@Override
-	public void prepare(BenchmarkRun benchmarkRun) {
-
-	}
-
-	@Override
-	public void startup(BenchmarkRun benchmarkRun) {
-		startBenchmarkLogging(benchmarkRun.getLogDir().resolve("platform").resolve("driver.logs"));
-	}
-
-	@Override
-	public void terminate(BenchmarkRun benchmarkRun) {
 
 	}
 
@@ -155,16 +80,19 @@ public class ReferencePlatform implements Platform {
 		LOG.info("Loaded graph: " + formattedGraph.getName() + ".");
 	}
 
-	private PropertyGraph convertToPropertyGraph(FormattedGraph formattedGraph) throws Exception {
-		ValueParser vertexParser = getValueParser(formattedGraph.getVertexProperties());
-		ValueParser edgeParser = getValueParser(formattedGraph.getEdgeProperties());
+	@Override
+	public void deleteGraph(FormattedGraph formattedGraph) {
+		graph = null;
+	}
 
-		return PropertyGraphParser.parsePropertyGraph(
-				formattedGraph.getVertexFilePath(),
-				formattedGraph.getEdgeFilePath(),
-				formattedGraph.isDirected(),
-				vertexParser,
-				edgeParser);
+	@Override
+	public void prepare(BenchmarkRun benchmarkRun) {
+
+	}
+
+	@Override
+	public void startup(BenchmarkRun benchmarkRun) {
+		startBenchmarkLogging(benchmarkRun.getLogDir().resolve("platform").resolve("driver.logs"));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -218,9 +146,68 @@ public class ReferencePlatform implements Platform {
 	}
 
 	@Override
-	public void deleteGraph(FormattedGraph formattedGraph) {
-		graph = null;
+	public BenchmarkMetrics finalize(BenchmarkRun benchmarkRun) {
+		stopPlatformLogging();
+
+		Path path = benchmarkRun.getLogDir().resolve("platform").resolve("driver.logs");
+		String logs = null;
+		try {
+			logs = new String(readAllBytes(path));
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new IllegalStateException("Can't read file at " + path);
+		}
+
+		Long startTime = null;
+		Long endTime = null;
+
+		for (String line : logs.split("\n")) {
+			try {
+				if (line.contains("Processing starts at: ")) {
+					String[] lineParts = line.split("\\s+");
+					startTime = Long.parseLong(lineParts[lineParts.length - 1]);
+				}
+
+				if (line.contains("Processing ends at: ")) {
+					String[] lineParts = line.split("\\s+");
+					endTime = Long.parseLong(lineParts[lineParts.length - 1]);
+				}
+			} catch (Exception e) {
+				LOG.error(String.format("Cannot parse line: %s", line, e));
+			}
+
+		}
+
+		if(startTime != null && endTime != null) {
+
+			BenchmarkMetrics metrics = new BenchmarkMetrics();
+			Long procTimeMS =  new Long(endTime - startTime);
+			BigDecimal procTimeS = (new BigDecimal(procTimeMS)).divide(new BigDecimal(1000), 3, BigDecimal.ROUND_CEILING);
+			metrics.setProcessingTime(new BenchmarkMetric(procTimeS, "s"));
+
+			return metrics;
+		} else {
+			return new BenchmarkMetrics();
+		}
 	}
+
+	@Override
+	public void terminate(BenchmarkRun benchmarkRun) {
+
+	}
+
+	private PropertyGraph convertToPropertyGraph(FormattedGraph formattedGraph) throws Exception {
+		ValueParser vertexParser = getValueParser(formattedGraph.getVertexProperties());
+		ValueParser edgeParser = getValueParser(formattedGraph.getEdgeProperties());
+
+		return PropertyGraphParser.parsePropertyGraph(
+				formattedGraph.getVertexFilePath(),
+				formattedGraph.getEdgeFilePath(),
+				formattedGraph.isDirected(),
+				vertexParser,
+				edgeParser);
+	}
+
 
 	private ValueParser getValueParser(PropertyList props) {
 		if (props.size() == 0) {
@@ -231,7 +218,8 @@ public class ReferencePlatform implements Platform {
 			throw new IllegalArgumentException("failed to find property value parser for properties: " + props);
 		}
 	}
-	public static void startBenchmarkLogging(Path fileName) {
+
+	private static void startBenchmarkLogging(Path fileName) {
 		sysOut = System.out;
 		sysErr = System.err;
 		try {
@@ -255,7 +243,6 @@ public class ReferencePlatform implements Platform {
 		System.setErr(sysErr);
 	}
 
-
 	private void writeOutput(String path, Map<Long, ? extends Object> output) throws IOException {
 		try (PrintWriter w = new PrintWriter(new FileOutputStream(path))) {
 			for (Map.Entry<Long, ? extends Object> entry: output.entrySet()) {
@@ -264,6 +251,20 @@ public class ReferencePlatform implements Platform {
 				w.print(entry.getValue());
 				w.println();
 			}
+		}
+	}
+
+	private class VoidParser implements ValueParser<Void> {
+		@Override
+		public Void parse(String[] tokens) throws IOException {
+			return null;
+		}
+	}
+
+	private class DoubleParser implements ValueParser<Double> {
+		@Override
+		public Double parse(String[] tokens) throws IOException {
+			return Double.parseDouble(tokens[0]);
 		}
 	}
 
