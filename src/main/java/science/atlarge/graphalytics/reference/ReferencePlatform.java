@@ -15,11 +15,11 @@
  */
 package science.atlarge.graphalytics.reference;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.nio.file.Path;
 import java.util.Map;
 
+import org.apache.commons.io.output.TeeOutputStream;
 import science.atlarge.graphalytics.domain.algorithms.*;
 import science.atlarge.graphalytics.domain.graph.FormattedGraph;
 import science.atlarge.graphalytics.report.result.BenchmarkMetrics;
@@ -34,7 +34,6 @@ import science.atlarge.graphalytics.reference.algorithms.lcc.LocalClusteringCoef
 import science.atlarge.graphalytics.reference.algorithms.pr.PageRankJob;
 import science.atlarge.graphalytics.reference.algorithms.sssp.SingleSourceShortestPathJob;
 import science.atlarge.graphalytics.reference.algorithms.wcc.WeaklyConnectedComponentsJob;
-import science.atlarge.graphalytics.report.result.PlatformBenchmarkResult;
 import science.atlarge.graphalytics.util.graph.PropertyGraph;
 import science.atlarge.graphalytics.util.graph.PropertyGraphParser;
 import science.atlarge.graphalytics.util.graph.PropertyGraphParser.ValueParser;
@@ -49,6 +48,9 @@ import org.apache.logging.log4j.Logger;
 public class ReferencePlatform implements Platform {
 
 	private static final Logger LOG = LogManager.getLogger();
+
+	private static PrintStream sysOut;
+	private static PrintStream sysErr;
 
 	private PropertyGraph graph;
 
@@ -73,6 +75,7 @@ public class ReferencePlatform implements Platform {
 
 	@Override
 	public BenchmarkMetrics finalize(BenchmarkRun benchmarkRun) {
+		stopPlatformLogging();
 		return new BenchmarkMetrics();
 	}
 
@@ -83,7 +86,7 @@ public class ReferencePlatform implements Platform {
 
 	@Override
 	public void startup(BenchmarkRun benchmarkRun) {
-
+		startBenchmarkLogging(benchmarkRun.getLogDir().resolve("platform").resolve("driver.logs"));
 	}
 
 	@Override
@@ -166,7 +169,6 @@ public class ReferencePlatform implements Platform {
 				throw new PlatformExecutionException("An error while writing to output file", e);
 			}
 		}
-
 		return true;
 	}
 
@@ -184,6 +186,31 @@ public class ReferencePlatform implements Platform {
 			throw new IllegalArgumentException("failed to find property value parser for properties: " + props);
 		}
 	}
+	public static void startBenchmarkLogging(Path fileName) {
+		sysOut = System.out;
+		sysErr = System.err;
+		try {
+			File file = null;
+			file = fileName.toFile();
+			file.getParentFile().mkdirs();
+			file.createNewFile();
+			FileOutputStream fos = new FileOutputStream(file);
+			TeeOutputStream bothStream =new TeeOutputStream(System.out, fos);
+			PrintStream ps = new PrintStream(bothStream);
+			System.setOut(ps);
+			System.setErr(ps);
+		} catch(Exception e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException("cannot redirect to output file");
+		}
+		System.out.println("StartTime: " + System.currentTimeMillis());
+	}
+
+	public static void stopPlatformLogging() {
+		System.setOut(sysOut);
+		System.setErr(sysErr);
+	}
+
 
 	private void writeOutput(String path, Map<Long, ? extends Object> output) throws IOException {
 		try (PrintWriter w = new PrintWriter(new FileOutputStream(path))) {
