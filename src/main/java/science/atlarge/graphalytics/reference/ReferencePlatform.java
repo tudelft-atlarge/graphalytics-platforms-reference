@@ -97,7 +97,7 @@ public class ReferencePlatform implements Platform {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean run(BenchmarkRun benchmarkRun) throws PlatformExecutionException {
+	public void run(BenchmarkRun benchmarkRun) throws PlatformExecutionException {
 		Algorithm algorithm = benchmarkRun.getAlgorithm();
 		Object parameters = benchmarkRun.getAlgorithmParameters();
 		Map<Long, ? extends Object> output;
@@ -142,7 +142,6 @@ public class ReferencePlatform implements Platform {
 			}
 		}
 		LOG.info("Processing ends at: " + System.currentTimeMillis());
-		return true;
 	}
 
 	@Override
