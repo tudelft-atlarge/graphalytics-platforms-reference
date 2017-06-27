@@ -55,40 +55,17 @@ public class ReferencePlatform implements Platform {
 	private static PrintStream sysOut;
 	private static PrintStream sysErr;
 
-	private PropertyGraph graph;
-
+	@Override
+	public void verifySetup() {}
 
 	@Override
-	public void verifySetup() {
-
-	}
+	public void loadGraph(FormattedGraph formattedGraph) throws Exception {}
 
 	@Override
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void loadGraph(FormattedGraph formattedGraph) throws Exception {
-		LOG.info("Loading graph: " + formattedGraph.getName() + ".");
-		ValueParser vertexParser = getValueParser(formattedGraph.getVertexProperties());
-		ValueParser edgeParser = getValueParser(formattedGraph.getEdgeProperties());
-
-		this.graph = PropertyGraphParser.parsePropertyGraph(
-				formattedGraph.getVertexFilePath(),
-				formattedGraph.getEdgeFilePath(),
-				formattedGraph.isDirected(),
-				vertexParser,
-				edgeParser);
-
-		LOG.info("Loaded graph: " + formattedGraph.getName() + ".");
-	}
+	public void deleteGraph(FormattedGraph formattedGraph) {}
 
 	@Override
-	public void deleteGraph(FormattedGraph formattedGraph) {
-		graph = null;
-	}
-
-	@Override
-	public void prepare(BenchmarkRun benchmarkRun) {
-
-	}
+	public void prepare(BenchmarkRun benchmarkRun) {}
 
 	@Override
 	public void startup(BenchmarkRun benchmarkRun) {
@@ -196,15 +173,21 @@ public class ReferencePlatform implements Platform {
 	}
 
 	private PropertyGraph convertToPropertyGraph(FormattedGraph formattedGraph) throws Exception {
+		LOG.info("Loading graph: " + formattedGraph.getName() + ".");
+
 		ValueParser vertexParser = getValueParser(formattedGraph.getVertexProperties());
 		ValueParser edgeParser = getValueParser(formattedGraph.getEdgeProperties());
 
-		return PropertyGraphParser.parsePropertyGraph(
+		PropertyGraph graph = PropertyGraphParser.parsePropertyGraph(
 				formattedGraph.getVertexFilePath(),
 				formattedGraph.getEdgeFilePath(),
 				formattedGraph.isDirected(),
 				vertexParser,
 				edgeParser);
+
+		LOG.info("Loaded graph: " + formattedGraph.getName() + ".");
+
+		return graph;
 	}
 
 
