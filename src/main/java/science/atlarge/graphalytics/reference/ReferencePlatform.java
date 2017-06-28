@@ -15,13 +15,15 @@
  */
 package science.atlarge.graphalytics.reference;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.util.Map;
 
+import org.apache.commons.io.output.TeeOutputStream;
 import science.atlarge.graphalytics.domain.algorithms.*;
 import science.atlarge.graphalytics.domain.graph.FormattedGraph;
+import science.atlarge.graphalytics.report.result.BenchmarkMetric;
 import science.atlarge.graphalytics.report.result.BenchmarkMetrics;
 import science.atlarge.graphalytics.execution.Platform;
 import science.atlarge.graphalytics.execution.PlatformExecutionException;
@@ -34,12 +36,13 @@ import science.atlarge.graphalytics.reference.algorithms.lcc.LocalClusteringCoef
 import science.atlarge.graphalytics.reference.algorithms.pr.PageRankJob;
 import science.atlarge.graphalytics.reference.algorithms.sssp.SingleSourceShortestPathJob;
 import science.atlarge.graphalytics.reference.algorithms.wcc.WeaklyConnectedComponentsJob;
-import science.atlarge.graphalytics.report.result.PlatformBenchmarkResult;
 import science.atlarge.graphalytics.util.graph.PropertyGraph;
 import science.atlarge.graphalytics.util.graph.PropertyGraphParser;
 import science.atlarge.graphalytics.util.graph.PropertyGraphParser.ValueParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import static java.nio.file.Files.readAllBytes;
 
 /**
  * Reference implementation of the Graphalytics benchmark.
@@ -49,79 +52,32 @@ import org.apache.logging.log4j.Logger;
 public class ReferencePlatform implements Platform {
 
 	private static final Logger LOG = LogManager.getLogger();
-
-	private PropertyGraph graph;
-
-	private class VoidParser implements ValueParser<Void> {
-		@Override
-		public Void parse(String[] tokens) throws IOException {
-			return null;
-		}
-	}
-
-	private class DoubleParser implements ValueParser<Double> {
-		@Override
-		public Double parse(String[] tokens) throws IOException {
-			return Double.parseDouble(tokens[0]);
-		}
-	}
+	private static PrintStream sysOut;
+	private static PrintStream sysErr;
 
 	@Override
-	public BenchmarkMetrics postprocess(BenchmarkRun benchmarkRun) {
-		return new BenchmarkMetrics();
-	}
+	public void verifySetup() {}
 
 	@Override
-	public void prepare(BenchmarkRun benchmarkRun) {
-
-	}
+	public void loadGraph(FormattedGraph formattedGraph) throws Exception {}
 
 	@Override
-	public void preprocess(BenchmarkRun benchmarkRun) {
-
-	}
+	public void deleteGraph(FormattedGraph formattedGraph) {}
 
 	@Override
-	public void cleanup(BenchmarkRun benchmarkRun) {
-
-	}
+	public void prepare(BenchmarkRun benchmarkRun) {}
 
 	@Override
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void uploadGraph(FormattedGraph formattedGraph) throws Exception {
-		LOG.info("Loading graph: " + formattedGraph.getName() + ".");
-		ValueParser vertexParser = getValueParser(formattedGraph.getVertexProperties());
-		ValueParser edgeParser = getValueParser(formattedGraph.getEdgeProperties());
-
-		this.graph = PropertyGraphParser.parsePropertyGraph(
-				formattedGraph.getVertexFilePath(),
-				formattedGraph.getEdgeFilePath(),
-				formattedGraph.isDirected(),
-				vertexParser,
-				edgeParser);
-
-		LOG.info("Loaded graph: " + formattedGraph.getName() + ".");
-	}
-
-	private PropertyGraph convertToPropertyGraph(FormattedGraph formattedGraph) throws Exception {
-		ValueParser vertexParser = getValueParser(formattedGraph.getVertexProperties());
-		ValueParser edgeParser = getValueParser(formattedGraph.getEdgeProperties());
-
-		return PropertyGraphParser.parsePropertyGraph(
-				formattedGraph.getVertexFilePath(),
-				formattedGraph.getEdgeFilePath(),
-				formattedGraph.isDirected(),
-				vertexParser,
-				edgeParser);
+	public void startup(BenchmarkRun benchmarkRun) {
+		startBenchmarkLogging(benchmarkRun.getLogDir().resolve("platform").resolve("driver.logs"));
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean execute(BenchmarkRun benchmarkRun) throws PlatformExecutionException {
+	public void run(BenchmarkRun benchmarkRun) throws PlatformExecutionException {
 		Algorithm algorithm = benchmarkRun.getAlgorithm();
 		Object parameters = benchmarkRun.getAlgorithmParameters();
 		Map<Long, ? extends Object> output;
-
 
 		PropertyGraph graph = null;
 		try {
@@ -130,6 +86,7 @@ public class ReferencePlatform implements Platform {
 			e.printStackTrace();
 		}
 
+		LOG.info("Processing starts at: " + System.currentTimeMillis());
 		switch (algorithm) {
 			case BFS:
 				output = new BreadthFirstSearchJob((PropertyGraph<Void, Void>) graph, (BreadthFirstSearchParameters)parameters).run();
@@ -161,14 +118,78 @@ public class ReferencePlatform implements Platform {
 				throw new PlatformExecutionException("An error while writing to output file", e);
 			}
 		}
-
-		return true;
+		LOG.info("Processing ends at: " + System.currentTimeMillis());
 	}
 
 	@Override
-	public void deleteGraph(FormattedGraph formattedGraph) {
-		graph = null;
+	public BenchmarkMetrics finalize(BenchmarkRun benchmarkRun) {
+		stopPlatformLogging();
+
+		Path path = benchmarkRun.getLogDir().resolve("platform").resolve("driver.logs");
+		String logs = null;
+		try {
+			logs = new String(readAllBytes(path));
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new IllegalStateException("Can't read file at " + path);
+		}
+
+		Long startTime = null;
+		Long endTime = null;
+
+		for (String line : logs.split("\n")) {
+			try {
+				if (line.contains("Processing starts at: ")) {
+					String[] lineParts = line.split("\\s+");
+					startTime = Long.parseLong(lineParts[lineParts.length - 1]);
+				}
+
+				if (line.contains("Processing ends at: ")) {
+					String[] lineParts = line.split("\\s+");
+					endTime = Long.parseLong(lineParts[lineParts.length - 1]);
+				}
+			} catch (Exception e) {
+				LOG.error(String.format("Cannot parse line: %s", line, e));
+			}
+
+		}
+
+		if(startTime != null && endTime != null) {
+
+			BenchmarkMetrics metrics = new BenchmarkMetrics();
+			Long procTimeMS =  new Long(endTime - startTime);
+			BigDecimal procTimeS = (new BigDecimal(procTimeMS)).divide(new BigDecimal(1000), 3, BigDecimal.ROUND_CEILING);
+			metrics.setProcessingTime(new BenchmarkMetric(procTimeS, "s"));
+
+			return metrics;
+		} else {
+			return new BenchmarkMetrics();
+		}
 	}
+
+	@Override
+	public void terminate(BenchmarkRun benchmarkRun) {
+
+	}
+
+	private PropertyGraph convertToPropertyGraph(FormattedGraph formattedGraph) throws Exception {
+		LOG.info("Loading graph: " + formattedGraph.getName() + ".");
+
+		ValueParser vertexParser = getValueParser(formattedGraph.getVertexProperties());
+		ValueParser edgeParser = getValueParser(formattedGraph.getEdgeProperties());
+
+		PropertyGraph graph = PropertyGraphParser.parsePropertyGraph(
+				formattedGraph.getVertexFilePath(),
+				formattedGraph.getEdgeFilePath(),
+				formattedGraph.isDirected(),
+				vertexParser,
+				edgeParser);
+
+		LOG.info("Loaded graph: " + formattedGraph.getName() + ".");
+
+		return graph;
+	}
+
 
 	private ValueParser getValueParser(PropertyList props) {
 		if (props.size() == 0) {
@@ -180,6 +201,30 @@ public class ReferencePlatform implements Platform {
 		}
 	}
 
+	private static void startBenchmarkLogging(Path fileName) {
+		sysOut = System.out;
+		sysErr = System.err;
+		try {
+			File file = null;
+			file = fileName.toFile();
+			file.getParentFile().mkdirs();
+			file.createNewFile();
+			FileOutputStream fos = new FileOutputStream(file);
+			TeeOutputStream bothStream =new TeeOutputStream(System.out, fos);
+			PrintStream ps = new PrintStream(bothStream);
+			System.setOut(ps);
+			System.setErr(ps);
+		} catch(Exception e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException("cannot redirect to output file");
+		}
+	}
+
+	public static void stopPlatformLogging() {
+		System.setOut(sysOut);
+		System.setErr(sysErr);
+	}
+
 	private void writeOutput(String path, Map<Long, ? extends Object> output) throws IOException {
 		try (PrintWriter w = new PrintWriter(new FileOutputStream(path))) {
 			for (Map.Entry<Long, ? extends Object> entry: output.entrySet()) {
@@ -188,6 +233,20 @@ public class ReferencePlatform implements Platform {
 				w.print(entry.getValue());
 				w.println();
 			}
+		}
+	}
+
+	private class VoidParser implements ValueParser<Void> {
+		@Override
+		public Void parse(String[] tokens) throws IOException {
+			return null;
+		}
+	}
+
+	private class DoubleParser implements ValueParser<Double> {
+		@Override
+		public Double parse(String[] tokens) throws IOException {
+			return Double.parseDouble(tokens[0]);
 		}
 	}
 
