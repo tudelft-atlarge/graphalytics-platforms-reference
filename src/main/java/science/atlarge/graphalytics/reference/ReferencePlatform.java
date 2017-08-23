@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.commons.io.output.TeeOutputStream;
 import science.atlarge.graphalytics.domain.algorithms.*;
 import science.atlarge.graphalytics.domain.graph.FormattedGraph;
+import science.atlarge.graphalytics.domain.graph.LoadedGraph;
 import science.atlarge.graphalytics.report.result.BenchmarkMetric;
 import science.atlarge.graphalytics.report.result.BenchmarkMetrics;
 import science.atlarge.graphalytics.execution.Platform;
@@ -59,10 +60,12 @@ public class ReferencePlatform implements Platform {
 	public void verifySetup() {}
 
 	@Override
-	public void loadGraph(FormattedGraph formattedGraph) throws Exception {}
+	public LoadedGraph loadGraph(FormattedGraph formattedGraph) throws Exception {
+		return new LoadedGraph(formattedGraph, formattedGraph.getVertexFilePath(), formattedGraph.getEdgeFilePath());
+	}
 
 	@Override
-	public void deleteGraph(FormattedGraph formattedGraph) {}
+	public void deleteGraph(LoadedGraph loadedGraph) {}
 
 	@Override
 	public void prepare(BenchmarkRun benchmarkRun) {}
@@ -81,7 +84,7 @@ public class ReferencePlatform implements Platform {
 
 		PropertyGraph graph = null;
 		try {
-			graph = convertToPropertyGraph(benchmarkRun.getFormattedGraph());
+			graph = convertToPropertyGraph(benchmarkRun.getLoadedGraph().getFormattedGraph());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
