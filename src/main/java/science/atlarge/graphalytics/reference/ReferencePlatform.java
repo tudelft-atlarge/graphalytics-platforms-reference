@@ -22,6 +22,9 @@ import java.util.Map;
 
 import org.apache.commons.io.output.TeeOutputStream;
 import science.atlarge.graphalytics.domain.algorithms.*;
+import science.atlarge.graphalytics.execution.BenchmarkRunSetup;
+import science.atlarge.graphalytics.execution.RunSpecification;
+import science.atlarge.graphalytics.execution.RuntimeSetup;
 import science.atlarge.graphalytics.domain.graph.FormattedGraph;
 import science.atlarge.graphalytics.domain.graph.LoadedGraph;
 import science.atlarge.graphalytics.report.result.BenchmarkMetric;
@@ -68,23 +71,29 @@ public class ReferencePlatform implements Platform {
 	public void deleteGraph(LoadedGraph loadedGraph) {}
 
 	@Override
-	public void prepare(BenchmarkRun benchmarkRun) {}
+	public void prepare(RunSpecification runSpecification) {}
 
 	@Override
-	public void startup(BenchmarkRun benchmarkRun) {
-		startBenchmarkLogging(benchmarkRun.getLogDir().resolve("platform").resolve("driver.logs"));
+	public void startup(RunSpecification runSpecification) {
+		BenchmarkRunSetup benchmarkRunSetup = runSpecification.getBenchmarkRunSetup();
+		startBenchmarkLogging(benchmarkRunSetup.getLogDir().resolve("platform").resolve("driver.logs"));
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void run(BenchmarkRun benchmarkRun) throws PlatformExecutionException {
+	public void run(RunSpecification runSpecification) throws PlatformExecutionException {
+
+		BenchmarkRun benchmarkRun = runSpecification.getBenchmarkRun();
+		BenchmarkRunSetup benchmarkRunSetup = runSpecification.getBenchmarkRunSetup();
+		RuntimeSetup runtimeSetup = runSpecification.getRuntimeSetup();
+
 		Algorithm algorithm = benchmarkRun.getAlgorithm();
 		Object parameters = benchmarkRun.getAlgorithmParameters();
 		Map<Long, ? extends Object> output;
 
 		PropertyGraph graph = null;
 		try {
-			graph = convertToPropertyGraph(benchmarkRun.getLoadedGraph().getFormattedGraph());
+			graph = convertToPropertyGraph(runtimeSetup.getLoadedGraph().getFormattedGraph());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -113,9 +122,9 @@ public class ReferencePlatform implements Platform {
 				throw new PlatformExecutionException("Unsupported algorithm: " + algorithm);
 		}
 
-		if (benchmarkRun.isOutputRequired()) {
+		if (benchmarkRunSetup.isOutputRequired()) {
 			try {
-				String outputFile = benchmarkRun.getOutputDir().resolve(benchmarkRun.getName()).toAbsolutePath().toString();
+				String outputFile = benchmarkRunSetup.getOutputDir().resolve(benchmarkRun.getName()).toAbsolutePath().toString();
 				writeOutput(outputFile, output);
 			} catch(IOException e) {
 				throw new PlatformExecutionException("An error while writing to output file", e);
@@ -125,10 +134,10 @@ public class ReferencePlatform implements Platform {
 	}
 
 	@Override
-	public BenchmarkMetrics finalize(BenchmarkRun benchmarkRun) {
+	public BenchmarkMetrics finalize(RunSpecification runSpecification) {
 		stopPlatformLogging();
-
-		Path path = benchmarkRun.getLogDir().resolve("platform").resolve("driver.logs");
+		BenchmarkRunSetup benchmarkRunSetup = runSpecification.getBenchmarkRunSetup();
+		Path path = benchmarkRunSetup.getLogDir().resolve("platform").resolve("driver.logs");
 		String logs = null;
 		try {
 			logs = new String(readAllBytes(path));
@@ -171,7 +180,7 @@ public class ReferencePlatform implements Platform {
 	}
 
 	@Override
-	public void terminate(BenchmarkRun benchmarkRun) {
+	public void terminate(RunSpecification runSpecification) {
 
 	}
 
