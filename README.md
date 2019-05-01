@@ -4,7 +4,7 @@
 
 ## Getting started
 
-Please refer to the documentation of the Graphalytics core (`graphalytics` repository) for an introduction to using Graphalytics.
+Please refer to the documentation of the Graphalytics core ([`graphalytics` repository](https://github.com/ldbc/ldbc_graphalytics)) for an introduction to using Graphalytics.
 
 ## Reference-implementation-specific configuration
 
